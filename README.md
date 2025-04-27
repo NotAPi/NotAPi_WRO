@@ -1,5 +1,5 @@
 # NotAPi_WRO_2024
-
+![image1](resources/image1.jpg)
 ## 1.Mobility Management
 Our car is mounted on the baisis of a RC car of which we only kept the wheels and the central axle and the drive shaft of the front wheels. The direction is controlled by a servo connected to a crank that can turn 140º and the circular movment of the servo moves the crack horizontaly and that turns the wheels. A motor is mounted on this base connected to a gear that we designed and got printed on aluminium to make the car slower that gear is connected to the main axle, the motor is connected to a L298N unit. Every other structural part has been 3D printed.
 
