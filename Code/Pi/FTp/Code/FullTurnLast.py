@@ -128,38 +128,37 @@ def forwardm(distance=1):
     time.sleep(6.6*distance)
 
 def distances():
+    
     # Get Front distance    
     Fdistance = F_read_lidar()
     while Fdistance is None or Fdistance > 500 or Fdistance <= 0:
         Fdistance = F_read_lidar()
         if Fdistance is not None and Fdistance < 500 and Fdistance > 0:
-            if Fdistance < 100:
-                Fdistance = F_read_lidar()
-                if Fdistance is not None and Fdistance < 500 and Fdistance > 0:
-                    break
-            break
+            if Fdistance > 100:
+                Fdistance2 = F_read_lidar()
+                if abs(Fdistance - Fdistance2) > 20:
+                    Fdistance = min(Fdistance2, Fdistance)
 
     # Get Left distance    
     Ldistance = L_read_lidar()
     while Ldistance is None or Ldistance > 500 or Ldistance <= 0:
         Ldistance = L_read_lidar()
         if Ldistance is not None and Ldistance < 500 and Ldistance > 0:
-            if Ldistance < 100:
-                Ldistance = L_read_lidar()
-                if Ldistance is not None and Ldistance < 500 and Ldistance > 0:
+            if Ldistance > 100:
+                Ldistance2 = L_read_lidar()
+                if abs(Ldistance - Ldistance2) > 20:
+                    Ldistance = min(Ldistance2, Ldistance)
                     break
-            break
-
+                
     # Get Right distance    
     Rdistance = R_read_lidar()
     while Rdistance is None or Rdistance > 500 or Rdistance <= 0:
         Rdistance = R_read_lidar()
         if Rdistance is not None and Rdistance < 500 and Rdistance > 0:
-            if Rdistance < 100:
-                Rdistance = R_read_lidar()
-                if Rdistance is not None and Rdistance < 500 and Rdistance > 0:
-                    break
-            break
+            if Rdistance > 100:
+                Rdistance2 = R_read_lidar()
+                if abs(Rdistance - Rdistance2) > 20:
+                    Rdistance = min(Rdistance2, Rdistance)
 
     # Ensure all distances are valid before returning
     if Ldistance is None or Rdistance is None or Fdistance is None:
