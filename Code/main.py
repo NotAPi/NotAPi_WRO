@@ -1,9 +1,12 @@
 #!/usr/bin/python
 
+# cSpell:disable
+
 import csv
 import datetime
 import os
 import pigpio
+import statistics
 import time
 import VL53L0X
 
@@ -19,7 +22,19 @@ except:
 
 pi = pigpio.pi()
 
-DO_CSV = True
+DO_CSV = not True
+
+#
+# ToF sensor accuracy modes (as per library)
+#
+# - GOOD        # 33 ms timing budget 1.2m range
+# - BETTER      # 66 ms timing budget 1.2m range
+# - BEST        # 200 ms 1.2m range
+# - LONG_RANGE  # 33 ms timing budget 2m range
+# - HIGH_SPEED  # 20 ms timing budget 1.2m range
+#
+#ACCURACY_MODE = VL53L0X.Vl53l0xAccuracyMode.BETTER
+ACCURACY_MODE = VL53L0X.Vl53l0xAccuracyMode.LONG_RANGE
 
 # ToF sensors
 L_TOF_PIN = 22
@@ -40,6 +55,8 @@ SERVO_PIN = 17
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
+SENSOR_HIST_LENGTH = 5
+
 class VL53L0X_XSHUT(VL53L0X.VL53L0X):
     def __init__(self, xshut_pin, i2c_bus=1, i2c_address=0x29):
         super().__init__(i2c_bus=i2c_bus, i2c_address=i2c_address)
@@ -48,15 +65,30 @@ class VL53L0X_XSHUT(VL53L0X.VL53L0X):
         self.xshut_pin = xshut_pin
         GPIO.setup(self.xshut_pin, GPIO.OUT)
         GPIO.output(self.xshut_pin, GPIO.LOW)
+        self.history = []
 
     def open(self):
         GPIO.output(self.xshut_pin, GPIO.HIGH)
-        time.sleep(0.05) # TODO: verify
+        time.sleep(0.05) # Very important delay, do not remove
         super().open()
 
     def close(self):
         super().close()
         GPIO.output(self.xshut_pin, GPIO.LOW)
+        
+    def get_distance(self):
+        #return super().get_distance()
+        if len(self.history) >= SENSOR_HIST_LENGTH:
+            self.history.pop(0)
+        self.history.append(super().get_distance())
+        return int(statistics.median(self.history))
+        #return statistics.fmean(self.history)
+    
+    def get_raw_distance(self):
+        if len(self.history) == 0:
+            return self.get_distance()
+        else:
+            return self.history[-1]
 
 DIR_FORWARD = 1
 DIR_STOPPED = 0
@@ -69,7 +101,7 @@ class Servo:
         self.pin = pin
         self.sweep_angle = sweep_angle
         self.offset = offset
-        self.set_angle()
+        self.mid()
 
     def set_angle(self, angle=0):
         # todo: I wanted to write a comment in here
@@ -126,32 +158,32 @@ class Motor:
         GPIO.output(self.ena_pin, GPIO.LOW)
         self.motor_pwm.ChangeDutyCycle(0)
 
-tof_l = VL53L0X_XSHUT(i2c_address=0x2a, xshut_pin=L_TOF_PIN)
-tof_r = VL53L0X_XSHUT(i2c_address=0x2b, xshut_pin=R_TOF_PIN)
-tof_f = VL53L0X_XSHUT(i2c_address=0x2c, xshut_pin=F_TOF_PIN)
+motor = Motor(IN1_PIN, IN2_PIN, ENA_PIN)
+servo = Servo(pin=SERVO_PIN, sweep_angle=ANGLE_TURN, offset=-4.615)
+
+tof_f = VL53L0X_XSHUT(i2c_address=0x2a, xshut_pin=F_TOF_PIN)
+tof_l = VL53L0X_XSHUT(i2c_address=0x2b, xshut_pin=L_TOF_PIN)
+tof_r = VL53L0X_XSHUT(i2c_address=0x2c, xshut_pin=R_TOF_PIN)
 
 tof_list = [
+    tof_f,
     tof_l,
     tof_r,
-    tof_f,
 ]
 
 for tof in tof_list:
     tof.open()
-    tof.start_ranging(VL53L0X.Vl53l0xAccuracyMode.BETTER)
+    tof.start_ranging(ACCURACY_MODE)
 
 timing = tof_f.get_timing()
 if timing < 20000:
     timing = 20000
 print("Timing %d ms" % (timing / 1000))
 
-motor = Motor(IN1_PIN, IN2_PIN, ENA_PIN)
-servo = Servo(pin=SERVO_PIN, sweep_angle=ANGLE_TURN, offset=-4.615)
-
 print("ready")
 
-MIN_F_DIST = 400
-MIN_LR_DIST = 100
+MIN_F_DIST = 450
+MIN_LR_DIST = 125
 NUM_CYCLES_F = 0
 NUM_CYCLES_LR = 0
 
@@ -201,10 +233,13 @@ try:
             dist_f = tof_f.get_distance()
             dist_l = tof_l.get_distance()
             dist_r = tof_r.get_distance()
+            rawd_f = tof_f.get_raw_distance()
+            rawd_l = tof_l.get_raw_distance()
+            rawd_r = tof_r.get_raw_distance()
             if DO_CSV:
-                print(f"{dist_f},{dist_l},{dist_r}")
+                print(f"{dist_f},{dist_l},{dist_r},{rawd_f},{rawd_l},{rawd_r}")
             else:
-                print(f"F: {dist_f}\tL: {dist_l}\tR: {dist_r}")
+                print(f"F: {dist_f}\tL: {dist_l}\tR: {dist_r}\t|\tf: {rawd_f}\tl: {rawd_l}\tr: {rawd_r}")
             match self.current_state:
                 case self.forward:
                     if dist_f < MIN_F_DIST:
@@ -218,12 +253,16 @@ try:
                             self.num_cycles += 1
                             if self.num_cycles > NUM_CYCLES_F:
                                 self.turn_right()
+                    elif dist_l < MIN_LR_DIST:
+                        self.num_cycles += 1
+                        if self.num_cycles > NUM_CYCLES_F:
+                            self.turn_right()
+                    elif dist_r < MIN_LR_DIST:
+                        self.num_cycles += 1
+                        if self.num_cycles > NUM_CYCLES_F:
+                            self.turn_left()
                     else:
                         self.num_cycles = 0
-                        if dist_l < MIN_LR_DIST:
-                            self.turn_right()
-                        elif dist_r < MIN_LR_DIST:
-                            self.turn_left()
                 case self.left:
                     if dist_f < MIN_F_DIST:
                         self.num_cycles = 0
@@ -257,3 +296,5 @@ except KeyboardInterrupt:
         tof.stop_ranging()
         tof.close()
     GPIO.cleanup()
+
+# cSpell: enable
