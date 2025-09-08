@@ -3,7 +3,7 @@
 ![teamPhoto](https://raw.githubusercontent.com/NotAPi/NotAPi_WRO/refs/heads/2025/Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg)
 [Demo](https://hc-cdn.hel1.your-objectstorage.com/s/v3/c7cb69626a8cc83b544aa8f92fb21f2a090f1fee_pxl_20250423_193522126_2.mp4)
 ## 1. Mobility Management
-Our car is built on a modified RC car bottom chassis, retaining only the wheels, central axle, and front drive shaft. Steering is controlled by a servo connected to a custom crank mechanism, allowing a 140º turning range. The servo's circular motion translates into horizontal movement of the crank, which directs the wheels. As this is a custom solution and not properly engineered the turning angle is not linear, this has difficulted our coding and logic.
+  For this version of the car we opted for a fresh start, we bought a front and back [axle](https://es.aliexpress.com/item/1005004716882834.html?gatewayAdapt=glo2esp) for managing directions and a pair of [wheels](https://es.aliexpress.com/item/1005006889490468.html?gatewayAdapt=glo2esp) to coplement it. Steering is controlled by a servo connected to the front axle, allowing it to turn.
 
 For propulsion, we're using a generic DC gearbox motor which is mounted on the chassis and connected to a custom-designed aluminium gear (CNC'd for precision). This gear reduces speed (which was a mistake from our part) and transfers power to the main axle. The motor is driven by an L298N motor controller, ensuring an easy motor control. All additional structural components were 3D-printed for lightweight durability and modularity.
 
@@ -26,7 +26,7 @@ The car employs a multi-sensor array for navigation:
 - **Camera:** *Temporarily removed*—planned future reintegration of a **Raspberry Pi Cam (220º FOV with fisheye lens)**.
 
 ### Processing Unit:
-- **Raspberry Pi 4 (4GB)** running **Raspbian** for stable operation.  
+- **Raspberry Pi 5 (8GB)** running **Raspbian** for stable operation.  
 
 ---
 
