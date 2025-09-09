@@ -1,11 +1,11 @@
-# NotAPi_WRO_2025
+z# NotAPi_WRO_2025
 ![image1](resources/hetimage.jpg)
 ![teamPhoto](https://raw.githubusercontent.com/NotAPi/NotAPi_WRO/refs/heads/2025/Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg)
 [Demo](https://hc-cdn.hel1.your-objectstorage.com/s/v3/c7cb69626a8cc83b544aa8f92fb21f2a090f1fee_pxl_20250423_193522126_2.mp4)
 ## 1. Mobility Management
-  For this version of the car we opted for a fresh start, we bought a front and back [axle](https://es.aliexpress.com/item/1005004716882834.html?gatewayAdapt=glo2esp) for managing directions and a pair of [wheels](https://es.aliexpress.com/item/1005006889490468.html?gatewayAdapt=glo2esp) to coplement it. Steering is controlled by a servo connected to the front axle, allowing it to turn.
+  For this version of the car we opted for a fresh start, we bought a front and back [axle](https://es.aliexpress.com/item/1005004716882834.html?gatewayAdapt=glo2esp) for managing directions and a pair of [wheels](https://es.aliexpress.com/item/1005006889490468.html?gatewayAdapt=glo2esp) to compliment it. Steering is controlled by a servo connected to the front axle, allowing it to turn.
 
-For propulsion, we're using a generic DC gearbox motor which is mounted on the chassis and connected to a custom-designed aluminium gear (CNC'd for precision). This gear reduces speed (which was a mistake from our part) and transfers power to the main axle. The motor is driven by an L298N motor controller, ensuring an easy motor control. All additional structural components were 3D-printed for lightweight durability and modularity.
+For propulsion, we're using a recycled motor which was previously designed for a printer connected to the front axle, ensuring it . This gear reduces speed (which was a mistake from our part) and transfers power to the main axle. The motor is driven by an L298N motor controller, ensuring an easy motor control. All additional structural components were 3D-printed for lightweight durability and modularity.
 
 **Key Features:**
 - Servo-driven steering with 140º range
@@ -16,9 +16,9 @@ For propulsion, we're using a generic DC gearbox motor which is mounted on the c
 
 ## 2. Power and Sensor Management
 ### Power System
-The robot is powered by a **4S 18650 Li-ion battery (14.4V, 2200mAh theoretical)**. To distribute power efficiently, we use two buck voltage regulators:
+(The robot is powered by a **4S 18650 Li-ion battery (14.4V, 2200mAh theoretical)**. To distribute power efficiently, we use two buck voltage regulators:
 - A **12V regulator** for the motor (note: overvolting at 12V causes the motor to go faster, however it increases the likelyhood for it to burn (and even catch fire if not supervised)).
-- A **5V regulator** for all other components, routed through a custom-designed PCB for easy power distribution.
+- A **5V regulator** for all other components.)
 
 ### Sensors
 The car employs a multi-sensor array for navigation:
@@ -26,7 +26,7 @@ The car employs a multi-sensor array for navigation:
 - **Camera:** *Temporarily removed*—planned future reintegration of a **Raspberry Pi Cam (220º FOV with fisheye lens)**.
 
 ### Processing Unit:
-- **Raspberry Pi 5 (8GB)** running **Raspbian** for stable operation.  
+- As a processing unit we use an ESP32, stable reliable and allows multithreading.  
 
 ---
 
