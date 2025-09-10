@@ -48,7 +48,7 @@ void loop() {
         case 'w':
             digitalWrite(EN,LOW);
             delay(100);
-            digitalWrite(EN, HIGH);
+            analogWrite(EN, speed);
             digitalWrite(FW, HIGH);
             digitalWrite(BW, LOW);
             break;
@@ -56,7 +56,7 @@ void loop() {
         case 's':
             digitalWrite(EN,LOW);
             delay(100);
-            digitalWrite(EN, HIGH);
+            analogWrite(EN, speed);
             digitalWrite(FW, LOW);
             digitalWrite(BW, HIGH);
             break;
@@ -77,6 +77,22 @@ void loop() {
             Serial.println(servoAngle);
             break;
         
+        case 'e':
+            if (speed >= 225) {
+                speed = 255;
+            } else {
+                speed += 25;
+            }
+            Serial.println(speed);
+            break;
+        case 'q':
+            if (speed <= 30) {
+                speed = 0;
+            } else {
+                speed -= 25;
+            }
+            Serial.println(speed);
+            break;
         default:
             digitalWrite(EN, LOW);
             digitalWrite(FW, LOW);
