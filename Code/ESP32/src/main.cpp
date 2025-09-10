@@ -43,43 +43,46 @@ void loop() {
         Serial.flush();
 
 
-
-        if (input == 'w') {
+        switch (input)
+        {
+        case 'w':
             digitalWrite(EN,LOW);
             delay(100);
-            
             digitalWrite(EN, HIGH);
             digitalWrite(FW, HIGH);
             digitalWrite(BW, LOW);
+            break;
 
-        } else if (input == 's') {
+        case 's':
             digitalWrite(EN,LOW);
             delay(100);
-
             digitalWrite(EN, HIGH);
             digitalWrite(FW, LOW);
             digitalWrite(BW, HIGH);
-        } else if (input == 'a') {
+            break;
+
+        case 'a':
             if (servoAngle > 0) {
                 servoAngle -= 10;
             }
-            driveServo.write(servoAngle); 
+            driveServo.write(servoAngle);
             Serial.println(servoAngle);
-        }
-        else if (input == 'd') {
+            break;
+
+        case 'd':
             if (servoAngle < 180) {
                 servoAngle += 10;
             }
-            driveServo.write(servoAngle); 
+            driveServo.write(servoAngle);
             Serial.println(servoAngle);
-        }        
-        else
-        {
+            break;
+        
+        default:
             digitalWrite(EN, LOW);
             digitalWrite(FW, LOW);
             digitalWrite(BW, LOW);
+            break;
         }
-
     }
 
     delay(5); // Wait for the servo to reach the position
