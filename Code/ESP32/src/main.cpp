@@ -9,6 +9,7 @@
 
 Servo driveServo;
 int servoAngle = 90;
+int speed = 255;
 
 void setup() {
     Serial.begin(115200);
@@ -40,6 +41,8 @@ void loop() {
         Serial.print("You entered: ");
         Serial.println(input);
         Serial.flush();
+
+
 
         if (input == 'w') {
             digitalWrite(EN,LOW);
