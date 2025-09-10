@@ -62,16 +62,16 @@ void loop() {
             break;
 
         case 'a':
-            if (servoAngle > 0) {
-                servoAngle -= 10;
+            if (servoAngle < 0) {
+                servoAngle += 10;
             }
             driveServo.write(servoAngle);
             Serial.println(servoAngle);
             break;
 
         case 'd':
-            if (servoAngle < 180) {
-                servoAngle += 10;
+            if (servoAngle > 180) {
+                servoAngle -= 10;
             }
             driveServo.write(servoAngle);
             Serial.println(servoAngle);
