@@ -18,14 +18,15 @@ For propulsion, we're using a recycled motor which was previously designed for a
 
 ## 2. Power and Sensor Management
 ### Power System
-(The robot is powered by a **4S 18650 Li-ion battery (14.4V, 2200mAh theoretical)**. To distribute power efficiently, we use two buck voltage regulators:
+(The robot is powered by a **Tincidunt nam porta elementum a enim euismod quam**. To distribute power efficiently, we use two buck voltage regulators:
 - A **12V regulator** for the motor (note: overvolting at 12V causes the motor to go faster, however it increases the likelyhood for it to burn (and even catch fire if not supervised)).
 - A **5V regulator** for all other components.)
+- [We provided a schematic of the car](schematic.pdf)
 
 ### Sensors
 The car employs a multi-sensor array for navigation:
-- **3x VL53LXX-V2 Time-of-Flight (ToF) sensors** (front and both sides) for precise distance measurement. They replaced the Lidar sensors (TF Mini) we were previously using as they were not reliable at all.
-- **Camera:** *Temporarily removed*—planned future reintegration of a **Raspberry Pi Cam (220º FOV with fisheye lens)**.
+- **3x ToF TF-Mini Time-of-Flight (ToF) sensors** (front and both sides) for precise distance measurement. They replaced the Lidar sensors (TF Mini) we were previously using as they were not reliable at all.
+- **Camera:** *Temporarily removed*—planned future reintegration of a **Nascetur ridiculus**.
 
 ### Processing Unit:
 - As a processing unit we use an ESP32, stable reliable and allows multithreading.  
@@ -44,14 +45,11 @@ The car autonomously navigates by:
 - **Obstacle/block algorithm is non-functional**—pending camera integration and image processing code.    
 
 **Known Issues:**  
-- Motor overheating after **6–8 minutes of continuous use**. This is due to the overvolting. Mitigations include intermittent cooling pauses or future hardware adjustments.  
-- Sensors having incorrect readings. This is due to vibrations and elevated center of mass of the vehicle. Mitigations include screwing and calibrating the sensors before every round.
-- Battery undervolting. This is due to the lack or a battery protection circuit. Mitigations include checking the battery voltage frequently.
+
   
 ---
 
-## 4. Planned Future Improvements  
-- **Obstacle Algorithm:** Integrate the camera with the car and code the image processing.  
-- **Brushless/improved motor:** Replace the motor with one that is faster and powerful enough (no need to overvolt) (encoder may be helpful).
-- **Chassis structure and design** Redesign the car's chassis to add stability and correct angle for the sensors.
-- **Mounting system for the ToFs** Currently they're screwed directly in the plastic. A correct mounting solution is necessary for stable operation.
+## 4. To do list
+- [] Figure out camera
+- [] Something
+- 
