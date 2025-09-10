@@ -1,10 +1,14 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
 
 #define EN 25
 #define FW 26
 #define BW 27
+#define ServoPin 18
+
+Servo driveServo;
+int servoAngle = 90;
 
 void setup() {
     Serial.begin(115200);
@@ -19,6 +23,9 @@ void setup() {
     digitalWrite (EN, LOW); 
     digitalWrite (FW, LOW); 
     digitalWrite (BW, LOW); 
+
+    driveServo.attach(ServoPin);
+    driveServo.write(90); // Set the servo to the specified angle
 }
 
 
@@ -49,7 +56,21 @@ void loop() {
             digitalWrite(EN, HIGH);
             digitalWrite(FW, LOW);
             digitalWrite(BW, HIGH);
-        } else
+        } else if (input == 'a') {
+            if (servoAngle > 0) {
+                servoAngle -= 10;
+            }
+            driveServo.write(servoAngle); 
+            Serial.println(servoAngle);
+        }
+        else if (input == 'd') {
+            if (servoAngle < 180) {
+                servoAngle += 10;
+            }
+            driveServo.write(servoAngle); 
+            Serial.println(servoAngle);
+        }        
+        else
         {
             digitalWrite(EN, LOW);
             digitalWrite(FW, LOW);
@@ -58,6 +79,7 @@ void loop() {
 
     }
 
+    delay(5); // Wait for the servo to reach the position
     // if (input == 'a') {
     //     Serial.println("You pressed 'a'");
     // } else if (input == 'b') {
