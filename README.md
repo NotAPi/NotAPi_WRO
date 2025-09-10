@@ -50,6 +50,6 @@ The car autonomously navigates by:
 ---
 
 ## 4. To do list
-- [] Figure out camera
-- [] Something
+- [ ] Figure out camera
+- [ ] Something
 - 
