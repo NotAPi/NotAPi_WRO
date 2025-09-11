@@ -74,7 +74,6 @@ The car autonomously navigates by:
 This can be summarized in the following logic diagram:
 
 ```mermaid
-```mermaid
 flowchart TD
   Start([Start]) --> Forward[Move forward]
   Forward --> Fdist{Front distance < 140 cm?}
