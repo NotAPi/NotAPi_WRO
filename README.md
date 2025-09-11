@@ -48,6 +48,7 @@ The car employs a multi-sensor array for navigation:
 | ESP-32 | x1 | https://es.aliexpress.com/item/1005006456519790.html | 
 | Servo | x1 |
 | Battery | x1 | |
+| Motor | x1 |  https://www.transmotec.es/product/GR-18260-CVC/ | 
 ---
 
 ## 3. Obstacle Management & Navigation Logic
