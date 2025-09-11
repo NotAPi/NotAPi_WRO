@@ -31,6 +31,8 @@ The car employs a multi-sensor array for navigation:
 - As a processing unit we use an ESP32, stable reliable and allows multithreading.  
 
 
+
+
   [We provided a schematic of the car](schematic.pdf) along with a BOM
 
 | Items  | Quantity | Links | Brief Description |
