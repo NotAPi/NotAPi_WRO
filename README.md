@@ -90,10 +90,13 @@ flowchart TD
 
 ## 4. Pictures
 
+### Team Picture
 
 ![Team Picture](Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg)
 
 # TODO
+
+### Car Pictures
 
 <details>
   <summary>Car pictures (click to expand)</summary>
