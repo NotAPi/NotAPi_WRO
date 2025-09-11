@@ -7,12 +7,12 @@
 ## 1. Mobility Management
   For this version of the car we opted for a fresh start, we bought a front and back [axle](https://es.aliexpress.com/item/1005004716882834.html?gatewayAdapt=glo2esp) for managing directions and a pair of [wheels](https://es.aliexpress.com/item/1005006889490468.html?gatewayAdapt=glo2esp) to compliment it. Steering is controlled by a servo connected to the front axle, allowing it to turn.
 
-For propulsion, we're using a recycled motor which was previously designed for a printer connected to the front axle, ensuring it . This gear reduces speed (which was a mistake from our part) and transfers power to the main axle. The motor is driven by an L298N motor controller, ensuring an easy motor control. All additional structural components were 3D-printed for lightweight durability and modularity.
+For propulsion, we're using a recycled motor which was previously designed for a vacuum cleaner connected to the front axle, ensuring it . This gear reduces speed (which was a mistake from our part) and transfers power to the main axle. The motor is driven by an L298N motor controller, ensuring an easy motor control. All additional structural components were 3D-printed for lightweight durability and modularity.
 
 **Key Features:**
 - Servo-driven steering with 140º range
 - New axle made specially for rc cars giving us a huge advantage in control and reliability, we modified it a bit to fit the car needs
-- A new recycled motor with great power 
+- A robot cleaner vacuum conga cecotec motor with great power 
 
 ---
 
