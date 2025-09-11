@@ -36,14 +36,14 @@ The car employs a multi-sensor array for navigation:
 | Items  | Quantity | Links | Brief Description |
 | ------------- | ------------- | ----- | ------ |
 | TF-Mini  | x3  |       | Great Lidars now with the addition of (library for the tof) |
-|  12V Regulator | x1 |       |
-| 5V Regulator | x1 | |
+|  12V Regulator | x1 |       | for the motor|
+| 5V Regulator | x1 | | For regulating all components| 
 | Printer motor | x1 | |
 | front and back Axles| x2 |
-| Wheels | x4 | https://es.aliexpress.com/item/1005006889490468.html?gatewayAdapt=glo2esp | Good wheels that although they often slip out they pair well with the axle |
+| Wheels | x4 | https://es.aliexpress.com/item/1005006889490468.html | Good wheels that although they often slip out they pair well with the axle |
 | Car body | x1 | link the file
 | Car Skeleton | x1 | link the file 
-| ESP-32 | x1 |
+| ESP-32 | x1 | https://es.aliexpress.com/item/1005006456519790.html | 
 | Servo | x1 |
 | Battery | x1 | |
 ---
