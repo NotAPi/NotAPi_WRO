@@ -74,24 +74,20 @@ The car autonomously navigates by:
 This can be summarized in the following logic diagram:
 
 ```mermaid
+```mermaid
 flowchart TD
-    Start([Start]) --> Forward[Forward]
-
-    Forward --> Fdist{F_distance < 130}
-    
-    Fdist -- True --> Forward
-    Fdist -- False --> Ldist{L_distance > R_distance}
-    
-    Ldist -- True --> TurnLeft[Turn Left]
-    Ldist -- False --> TurnRight[Turn Right]
-    
-    TurnLeft --> Parallel[Try to be parallel with outer wall]
-    TurnRight --> Parallel
-    
-    Parallel --> Iter{Iteration = 12}
-    
-    Iter -- False --> Forward
-    Iter -- True --> Stop([Stop])
+  Start([Start]) --> Forward[Move forward]
+  Forward --> Fdist{Front distance < 140 cm?}
+  Fdist -- Yes --> Forward
+  Fdist -- No --> SideCheck{Left distance > Right distance?}
+  SideCheck -- Yes --> TurnLeft[Turn left]
+  SideCheck -- No --> TurnRight[Turn right]
+  TurnLeft --> Align[Align parallel to outer wall]
+  TurnRight --> Align
+  Align --> Count{Turns completed = 12?}
+  Count -- No --> Forward
+  Count -- Yes --> Stop([Stop])
+```
 
 ```
 
