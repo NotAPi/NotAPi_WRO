@@ -2,8 +2,6 @@
 
 ![image1](resources/newimage.jpg)
 ![teamPhoto](https://raw.githubusercontent.com/NotAPi/NotAPi_WRO/refs/heads/2025/Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg)
-![image1](resources/hetimage.jpg)
-[Demo](https://hc-cdn.hel1.your-objectstorage.com/s/v3/c7cb69626a8cc83b544aa8f92fb21f2a090f1fee_pxl_20250423_193522126_2.mp4)
 
 ## 1. Mobility Management
 
@@ -88,20 +86,29 @@ flowchart TD
   Count -- Yes --> Stop([Stop])
 ```
 
-```
-
-**Current Status:**
-
-- **Obstacle/block algorithm is non-functional** due to the absence of a camera.
-
-
-**Known Issues:**  
-No camera
-
 ---
 
-## 4. To do list
+## 4. Pictures
 
-- [ ] Figure out camera
-- [ ] Something
--
+
+![Team Picture](Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg)
+
+# TODO
+
+<details>
+  <summary>Car pictures (click to expand)</summary>
+  <img src="Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg" alt="Car Picture 1">
+  <img src="Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg" alt="Car Picture 2">
+  <img src="Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg" alt="Car Picture 3">
+  <img src="Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg" alt="Car Picture 4">
+  <img src="Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg" alt="Car Picture 5">
+</details>
+
+
+## 5. Performance Videos
+
+# TODO
+
+[Demo](https://hc-cdn.hel1.your-objectstorage.com/s/v3/c7cb69626a8cc83b544aa8f92fb21f2a090f1fee_pxl_20250423_193522126_2.mp4)
+[Demo2](https://hc-cdn.hel1.your-objectstorage.com/s/v3/c7cb69626a8cc83b544aa8f92fb21f2a090f1fee_pxl_20250423_193522126_2.mp4)
+[Demo3](https://hc-cdn.hel1.your-objectstorage.com/s/v3/c7cb69626a8cc83b544aa8f92fb21f2a090f1fee_pxl_20250423_193522126_2.mp4)
