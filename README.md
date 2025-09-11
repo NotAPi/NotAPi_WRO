@@ -11,8 +11,8 @@ For propulsion, we're using a recycled motor which was previously designed for a
 
 **Key Features:**
 - Servo-driven steering with 140º range
-- Custom aluminium gear for high endurance
-- L298N motor controller for reliable motor control
+- New axle made specially for rc cars giving us a huge advantage in control and reliability, we modified it a bit to fit the car needs
+- A new recycled motor with great power 
 
 ---
 
@@ -21,16 +21,31 @@ For propulsion, we're using a recycled motor which was previously designed for a
 (The robot is powered by a **Tincidunt nam porta elementum a enim euismod quam**. To distribute power efficiently, we use two buck voltage regulators:
 - A **12V regulator** for the motor (note: overvolting at 12V causes the motor to go faster, however it increases the likelyhood for it to burn (and even catch fire if not supervised)).
 - A **5V regulator** for all other components.)
-- [We provided a schematic of the car](schematic.pdf)
 
 ### Sensors
 The car employs a multi-sensor array for navigation:
-- **3x ToF TF-Mini Time-of-Flight (ToF) sensors** (front and both sides) for precise distance measurement. They replaced the Lidar sensors (TF Mini) we were previously using as they were not reliable at all.
+- **3x ToF TF-Mini Time-of-Flight (ToF) sensors** (front and both sides) for precise distance measurement. They replaced the _____________ sensors (_____________) we were previously using as they were not reliable at all.
 - **Camera:** *Temporarily removed*—planned future reintegration of a **Nascetur ridiculus**.
 
 ### Processing Unit:
 - As a processing unit we use an ESP32, stable reliable and allows multithreading.  
 
+
+  [We provided a schematic of the car](schematic.pdf) along with a BOM
+
+| Items  | Quantity | Links | Brief Description |
+| ------------- | ------------- | ----- | ------ |
+| TF-Mini  | x3  |       | Great Lidars now with the addition of (library for the tof) |
+|  12V Regulator | x1 |       |
+| 5V Regulator | x1 | |
+| Printer motor | x1 | |
+| front and back Axles| x2 |
+| Wheels | x4 | https://es.aliexpress.com/item/1005006889490468.html?gatewayAdapt=glo2esp | Good wheels that although they often slip out they pair well with the axle |
+| Car body | x1 | link the file
+| Car Skeleton | x1 | link the file 
+| ESP-32 | x1 |
+| Servo | x1 |
+| Battery | x1 | |
 ---
 
 ## 3. Obstacle Management & Navigation Logic
@@ -45,7 +60,7 @@ The car autonomously navigates by:
 - **Obstacle/block algorithm is non-functional**—pending camera integration and image processing code.    
 
 **Known Issues:**  
-
+No camera
   
 ---
 
