@@ -36,7 +36,7 @@ The car employs a multi-sensor array for navigation:
 | Items  | Quantity | Links | Brief Description |
 | ------------- | ------------- | ----- | ------ |
 | TF-Mini  | x3  |       | Great Lidars now with the addition of (library for the tof) |
-|  12V Regulator | x1 |       | for the motor|
+|  12V Regulator | x1 |       | For the motor|
 | 5V Regulator | x1 | | For regulating all components| 
 | Printer motor | x1 | |
 | front and back Axles| x2 |
