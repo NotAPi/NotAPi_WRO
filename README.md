@@ -5,31 +5,25 @@
 [Demo](https://hc-cdn.hel1.your-objectstorage.com/s/v3/c7cb69626a8cc83b544aa8f92fb21f2a090f1fee_pxl_20250423_193522126_2.mp4)
 
 ## 1. Mobility Management
-  For this version of the car we opted for a fresh start, we bought a front and back [axle](https://es.aliexpress.com/item/1005004716882834.html?gatewayAdapt=glo2esp) for managing directions and a pair of [wheels](https://es.aliexpress.com/item/1005006889490468.html?gatewayAdapt=glo2esp) to compliment it. Steering is controlled by a servo connected to the front axle, allowing it to turn.
 
-For propulsion, we're using a recycled motor which was previously designed for a vacuum cleaner connected to the front axle, ensuring it . This gear reduces speed (which was a mistake from our part) and transfers power to the main axle. The motor is driven by an L298N motor controller, ensuring an easy motor control. All additional structural components were 3D-printed for lightweight durability and modularity.
+For this version of the car we opted for a fresh start, we bought an axle set for managing directions and a pair of wheels to compliment it. Steering is controlled by a servo connected to the front axle, allowing it to turn in a precise manner. 
+For propulsion, we're using a recycled motor extracted from a dead vacuum cleaner, which we have tracked as being a Transmotec GR-18260-CVC. Fort he previous car we made a gear that reduces speed and transfers power to the main axle, unfortunately it is too big for the new motor and Works a Little too well. The motor is managed by an L298N motor controller, ensuring an easy motor control. All additional structural components were 3D-printed for lightweight, durability and modularity and all models can be checked on the models folder.
 
 **Key Features:**
-- Servo-driven steering with 140º range
-- New axle made specially for rc cars giving us a huge advantage in control and reliability, we modified it a bit to fit the car needs
-- A robot cleaner vacuum conga cecotec motor with great power 
-
+-	Servo-driven steering with 140º range
+-	New axle made specially for rc cars giving us a huge advantage in control and reliability, we modified it a bit to fit the car needs
+-	A new recycled motor with great power
 ---
 
 ## 2. Power and Sensor Management
-### Power System
-(The robot is powered by a **Tincidunt nam porta elementum a enim euismod quam**. To distribute power efficiently, we use two buck voltage regulators:
-- A **12V regulator** for the motor (note: overvolting at 12V causes the motor to go faster, however it increases the likelyhood for it to burn (and even catch fire if not supervised)).
-- A **5V regulator** for all other components.)
-
-### Sensors
-The car employs a multi-sensor array for navigation:
-- **3x ToF TF-Mini Time-of-Flight (ToF) sensors** (front and both sides) for precise distance measurement. They replaced the _____________ sensors (_____________) we were previously using as they were not reliable at all.
-- **Camera:** *Temporarily removed*—planned future reintegration of a **Nascetur ridiculus**.
-
-### Processing Unit:
-- As a processing unit we use an ESP32, stable reliable and allows multithreading.  
-
+## Power System
+The robot is powered by a Li-ion battery. To distribute power efficiently, we use two buck voltage regulators:
+-	A 12V regulator for the motor to allow it to yield optimal thrust in short periods of time, at the expense of shortening its lifespan and with risk of overheating.
+-	A 5V regulator for all other components, to protect the microcontroller from surges and regulate the battery life better.
+## Sensors
+The car currently employs a system of the following sensors:
+-	3x Lidars: Lidar is a Time of Flight laser technology that allows for great precision and prevents interference from natural and ambience light, which was a weak spot for our previuos sensors. One is located at the front, and one at each side of the car. They measure distance continously at send it to the controller via a IIC protocol. 
+-	Camera: Temporarily removed
 
 
 
