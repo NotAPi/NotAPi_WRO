@@ -6,7 +6,7 @@
 #define EN 25
 #define FW 26
 #define BW 27
-#define ServoPin 13
+#define ServoPin 18 
 #define StartButtonPin 19
 
 #define TF_F 0x14
@@ -86,9 +86,12 @@ void turn(int angle)
 
 void setup()
 {
+    
     Serial.begin(115200);
     Serial.println("Hello World!");
     delay(1000);
+    driveServo.attach(ServoPin);
+    driveServo.write(90); // Set the servo to the specified angle
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
 
@@ -152,8 +155,6 @@ void setup()
     digitalWrite(FW, LOW);
     digitalWrite(BW, LOW);
 
-    driveServo.attach(ServoPin);
-    driveServo.write(90); // Set the servo to the specified angle
     digitalWrite(LED_BUILTIN, LOW); // Turn the LED off
 }
 
