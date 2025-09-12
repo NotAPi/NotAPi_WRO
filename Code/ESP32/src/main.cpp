@@ -271,7 +271,7 @@ void loop()
 
     }
     }
-    // read 1st character from serial input
+    // THIS IS FOR DEBUGGING VIA SERIAL MONITOR, RC CAR MODE 
     char input;
     if (Serial.available() > 0)
     {
