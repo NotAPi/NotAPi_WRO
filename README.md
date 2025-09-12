@@ -110,9 +110,10 @@ To upload the code to the ESP32, you need to have [PlatformIO CLI](https://platf
     pio device monitor
     ```
 
-### Libraries Used
+### External Libraries Used
 
-- [TF-Mini Plus I2C](https://github.com/robopeak/rp-vision/tree/master/libraries/TFMini)
+- [TF-Mini Plus I2C](https://registry.platformio.org/libraries/budryerson/TFMPI2C)
+- [ESP32Servo](https://registry.platformio.org/libraries/madhephaestus/ESP32Servo)
 
 ---
 
