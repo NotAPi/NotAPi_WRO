@@ -61,15 +61,19 @@ A schematic of the electrical connections can be found [here](resources/schemati
 
 ## 3. Obstacle Management & Navigation Logic
 
+### Navigation Logic
+
 The car autonomously navigates by:
 
-1. **Advancing** until the front wall is ~140cm away.
-2. **Measuring distances** to walls (sides) using the ToF sensors.
-3. **Checking side distances** to determine the optimal turning direction (away from closer obstacles).
-4. **Executing turns** until the outer sensor detects an increase of the distance, as it indicates the car has rotated +90º.
-5. **Repeat** until the battery runs out, the sensors fail or we manually stop the car, as it currently doesn't have a way to check when it has made all 12 turns.
+- Moving forward until the front LIDAR detects an obstacle closer than 140 cm.
+- Upon detecting an obstacle, it compares the distances from the left and right LIDARs
+- It turns towards the side with the greater distance.
+- After turning, it aligns itself parallel to the outer wall using the side LIDARs (not yet implemented).
+- This process is repeated until the car has completed 12 turns, at which point it stops.
 
-This can be summarized in the following logic diagram:
+### Flow Chart
+
+This can be summarized in the following flow chart:
 
 ```mermaid
 flowchart TD
@@ -79,12 +83,36 @@ flowchart TD
   Fdist -- No --> SideCheck{Left distance > Right distance?}
   SideCheck -- Yes --> TurnLeft[Turn left]
   SideCheck -- No --> TurnRight[Turn right]
-  TurnLeft --> Align[Align parallel to outer wall]
+  TurnLeft --> Align[Align parallel to outer wall (not yet implemented)]
   TurnRight --> Align
   Align --> Count{Turns completed = 12?}
   Count -- No --> Forward
   Count -- Yes --> Stop([Stop])
 ```
+
+### Code Implementation
+
+All this logic is implemented in the `main.cpp` file, which can be found [here](Code/ESP32/src/main.cpp).
+For this project, we used the Arduino framework via PlatformIO, which simplified the development process significantly and allowed us to use existing Arduino libraries.
+
+##### Uploaded to the ESP32
+
+To upload the code to the ESP32, you need to have [PlatformIO CLI](https://platformio.org/) installed.
+
+1. Connect the ESP32 board to your computer via USB.
+2. Open a terminal and navigate to the `Code/ESP32` directory.
+3. Run the following command to upload the code:
+    ```bash
+    pio run --target upload
+    ```
+4. Monitor the serial output (optional) by running:
+    ```bash
+    pio device monitor
+    ```
+
+### Libraries Used
+
+- [TF-Mini Plus I2C](https://github.com/robopeak/rp-vision/tree/master/libraries/TFMini)
 
 ---
 
