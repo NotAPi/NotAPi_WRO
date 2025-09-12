@@ -83,7 +83,7 @@ flowchart TD
   Fdist -- No --> SideCheck{Left distance > Right distance?}
   SideCheck -- Yes --> TurnLeft[Turn left]
   SideCheck -- No --> TurnRight[Turn right]
-  TurnLeft --> Align[Align parallel to outer wall (not yet implemented)]
+  TurnLeft --> Align[Align parallel to outer wall \(not yet implemented\)]
   TurnRight --> Align
   Align --> Count{Turns completed = 12?}
   Count -- No --> Forward
