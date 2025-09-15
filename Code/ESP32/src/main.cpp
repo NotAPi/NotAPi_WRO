@@ -91,7 +91,7 @@ void setup()
     Serial.println("Hello World!");
     delay(1000);
     driveServo.attach(ServoPin);
-    driveServo.write(90); // Set the servo to the specified angle
+    driveServo.write(90); // Center the servo 
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
 
@@ -271,7 +271,7 @@ void loop()
 
     }
     }
-    // THIS IS FOR DEBUGGING VIA SERIAL MONITOR, RC CAR MODE 
+    // THIS IS FOR DEBUGGING VIA SERIAL MONITOR, (RC CAR MODE)
     char input;
     if (Serial.available() > 0)
     {
