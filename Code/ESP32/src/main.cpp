@@ -4,8 +4,8 @@
 #include <TFMPI2C.h>
 
 #define EN 25
-#define FW 26
-#define BW 27
+#define FW 27
+#define BW 26
 #define ServoPin 18 
 #define StartButtonPin 19
 
@@ -40,6 +40,10 @@ const int TURN_TIME_MS = 2000; // ms
 
 bool STATUS_LED_STATUS = false;
 
+const int MOTOR_PWM_CH = 8;
+const int MOTOR_PWM_FREQ = 5000;
+const int MOTOR_PWM_RES = 8; // 8-bit resolution
+
 int TF_F_DISTANCE;
 int TF_L_DISTANCE;
 int TF_R_DISTANCE;
@@ -72,7 +76,7 @@ void stop()
 
 void setSpeed(int spd)
 {
-    analogWrite(EN, spd);
+    ledcWrite(EN, spd);
 }
 
 void turn(int angle)
@@ -86,7 +90,10 @@ void turn(int angle)
 
 void setup()
 {
-    
+    ESP32PWM::allocateTimer(1); // PWM timer 1
+    ESP32PWM::allocateTimer(2); // PWM timer 2
+    ESP32PWM::allocateTimer(3); // PWM timer 3
+    ESP32PWM::allocateTimer(4); // PWM timer 4
     Serial.begin(115200);
     Serial.println("Hello World!");
     delay(1000);
@@ -146,7 +153,7 @@ void setup()
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
 
 
-    pinMode(EN, OUTPUT); // EN Pin
+    ledcAttachChannel(EN, MOTOR_PWM_FREQ, MOTOR_PWM_RES, 10); // EN Pin
     pinMode(FW, OUTPUT); // FW Pin
     pinMode(BW, OUTPUT); // BW Pin
     pinMode(StartButtonPin, INPUT_PULLDOWN);
@@ -287,17 +294,17 @@ void loop()
         switch (input)
         {
         case 'w':
-            analogWrite(EN, 0);
+            ledcWrite(EN, 0);
             delay(100);
-            analogWrite(EN, speed);
+            ledcWrite(EN, speed);
             digitalWrite(FW, HIGH);
             digitalWrite(BW, LOW);
             break;
 
         case 's':
-            analogWrite(EN, 0);
+            ledcWrite(EN, 0);
             delay(100);
-            analogWrite(EN, speed);
+            ledcWrite(EN, speed);
             digitalWrite(FW, LOW);
             digitalWrite(BW, HIGH);
             break;
@@ -329,7 +336,7 @@ void loop()
             {
                 speed += 25;
             }
-            analogWrite(EN, speed);
+            ledcWrite(EN, speed);
             Serial.println(speed);
             break;
         case 'q':
@@ -341,16 +348,16 @@ void loop()
             {
                 speed -= 25;
             }
-            analogWrite(EN, speed);
+            ledcWrite(EN, speed);
             Serial.println(speed);
             break;
         default:
-            analogWrite(EN, 0);
+            ledcWrite(EN, 0);
             digitalWrite(FW, LOW);
             digitalWrite(BW, LOW);
             break;
         }
     }
 
-    delay(5); // Wait for the servo to reach the position
+    delay(5); 
 }
