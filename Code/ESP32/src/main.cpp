@@ -7,7 +7,7 @@
 #define FW 27
 #define BW 26
 #define ServoPin 18 
-#define StartButtonPin 19
+#define StartButtonPin 0
 
 #define TF_F 0x14
 #define TF_L 0x13
@@ -42,7 +42,7 @@ bool STATUS_LED_STATUS = false;
 
 const int MOTOR_PWM_CH = 8;
 const int MOTOR_PWM_FREQ = 5000;
-const int MOTOR_PWM_RES = 8; // 8-bit resolution
+const int MOTOR_PWM_RES = 8; // 8-bit resolution4.34+5.5 mm
 
 int TF_F_DISTANCE;
 int TF_L_DISTANCE;
@@ -168,13 +168,13 @@ void setup()
 void loop()
 {
     // Non-blocking periodic read/print of all TF-Mini sensors every second
-    if (digitalRead(StartButtonPin) == HIGH && !canStart)
+    if (digitalRead(StartButtonPin) == LOW && !canStart)
     {
         canStart = true;
         setSpeed(speed);
         digitalWrite(LED_BUILTIN, HIGH);
         delay(2000);
-    } else if (digitalRead(StartButtonPin) == HIGH && canStart)
+    } else if (digitalRead(StartButtonPin) == LOW && canStart)
     {
         canStart = false;
         stop();
