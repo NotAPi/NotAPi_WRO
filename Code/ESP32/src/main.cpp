@@ -93,11 +93,16 @@ void setup()
     ESP32PWM::allocateTimer(1); // PWM timer 1
     ESP32PWM::allocateTimer(2); // PWM timer 2
     ESP32PWM::allocateTimer(3); // PWM timer 3
-    ESP32PWM::allocateTimer(4); // PWM timer 4
     Serial.begin(115200);
     Serial.println("Hello World!");
     delay(1000);
-    driveServo.attach(ServoPin);
+    // driveServo.attach(ServoPin);
+    if (driveServo.attach(ServoPin) < 0) // some servo fix ?
+    {
+        driveServo.detach(); ledcDetach(ServoPin); delay(100);
+        driveServo.attach(ServoPin);
+    }
+    delay(2000);
     driveServo.write(90); // Center the servo 
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
@@ -153,6 +158,7 @@ void setup()
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
 
 
+    pinMode(EN, OUTPUT); // EN Pin
     ledcAttachChannel(EN, MOTOR_PWM_FREQ, MOTOR_PWM_RES, 10); // EN Pin
     pinMode(FW, OUTPUT); // FW Pin
     pinMode(BW, OUTPUT); // BW Pin
@@ -174,6 +180,7 @@ void loop()
         setSpeed(speed);
         digitalWrite(LED_BUILTIN, HIGH);
         delay(2000);
+        turn(90);
     } else if (digitalRead(StartButtonPin) == LOW && canStart)
     {
         canStart = false;
@@ -181,6 +188,7 @@ void loop()
         setSpeed(0);
         digitalWrite(LED_BUILTIN, LOW);
         delay(2000);
+        turn(90);
     }
 
 
@@ -221,11 +229,11 @@ void loop()
             setSpeed(speed);
             if (TF_L_DISTANCE < WALL_DIS_TH)
             {
-                turn(105); // turn right
+                turn(120); // turn right
             }
             else if (TF_R_DISTANCE < WALL_DIS_TH)
             {
-                turn(75); // turn left
+                turn(60); // turn left
             }
             else
             {
@@ -234,8 +242,8 @@ void loop()
         }
         else // too close to front wall, turn
         {
-            stop();
-            delay(500);
+            // stop();
+            delay(100);
             if (TF_L_DISTANCE > TF_R_DISTANCE)
             {
                 turn(60); // turn left
@@ -246,13 +254,12 @@ void loop()
                 turn(120); // turn right
                 Serial.println("TURN RIGHT");
             }
-            delay(500);    
+            // delay(100);
             forward();
             setSpeed(speed);
             delay(TURN_TIME_MS);
         }
 
-        // v
         // for ()
         // {
         //     uint8_t addr = SENSOR_ADDRS[i];
