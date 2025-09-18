@@ -6,7 +6,7 @@
 #define EN 25
 #define FW 27
 #define BW 26
-#define ServoPin 18 
+#define ServoPin 18
 #define StartButtonPin 0
 
 #define TF_F 0x14
@@ -31,12 +31,13 @@ const char *SENSOR_NAMES[] = {"Front", "Left", "Right"};
 
 Servo driveServo;
 int servoAngle = 90;
-int speed = 255;
+int speed = 230; // 0-255
 bool canStart = false;
 
-const int F_dis_TH = 130; // cm
-const int WALL_DIS_TH = 30; // cm 
-const int TURN_TIME_MS = 600; // ms; minimum time to turn
+const int F_dis_TH = 130;      // cm
+const int F_dis_Crash_TH = 20; // cm
+const int WALL_DIS_TH = 30;    // cm
+const int TURN_TIME_MS = 800;  // ms; minimum time to turn
 
 bool STATUS_LED_STATUS = false;
 
@@ -99,11 +100,13 @@ void setup()
     // driveServo.attach(ServoPin);
     if (driveServo.attach(ServoPin) < 0) // some servo fix ?
     {
-        driveServo.detach(); ledcDetach(ServoPin); delay(100);
+        driveServo.detach();
+        ledcDetach(ServoPin);
+        delay(100);
         driveServo.attach(ServoPin);
     }
     delay(2000);
-    driveServo.write(90); // Center the servo 
+    driveServo.write(90); // Center the servo
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
 
@@ -133,7 +136,7 @@ void setup()
             tfm.printReply();
         }
 
-        delay(50); 
+        delay(50);
 
         Serial.print("Sensor @0x");
         if (addr < 16)
@@ -157,11 +160,10 @@ void setup()
     delay(10);
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
 
-
-    pinMode(EN, OUTPUT); // EN Pin
+    pinMode(EN, OUTPUT);                                      // EN Pin
     ledcAttachChannel(EN, MOTOR_PWM_FREQ, MOTOR_PWM_RES, 10); // EN Pin
-    pinMode(FW, OUTPUT); // FW Pin
-    pinMode(BW, OUTPUT); // BW Pin
+    pinMode(FW, OUTPUT);                                      // FW Pin
+    pinMode(BW, OUTPUT);                                      // BW Pin
     pinMode(StartButtonPin, INPUT_PULLDOWN);
 
     digitalWrite(EN, LOW);
@@ -181,7 +183,8 @@ void loop()
         digitalWrite(LED_BUILTIN, HIGH);
         delay(2000);
         turn(90);
-    } else if (digitalRead(StartButtonPin) == LOW && canStart)
+    }
+    else if (digitalRead(StartButtonPin) == LOW && canStart)
     {
         canStart = false;
         stop();
@@ -191,8 +194,7 @@ void loop()
         turn(90);
     }
 
-
-    // CAR LOGIC ALGORITHM: 
+    // CAR LOGIC ALGORITHM:
     // START:
     // F_dis > F_dis_TH -> forward
     // F_dis < F_dis_TH -> stop -> L_dis > R_dis ? turn left : turn right
@@ -204,124 +206,141 @@ void loop()
         delay(100);
         digitalWrite(LED_BUILTIN, STATUS_LED_STATUS); // Turn the LED off
         // return;
-    } else {
-    unsigned long now = millis();
-
-    if (now - lastTFPrintMs >= TF_PRINT_PERIOD_MS)
+    }
+    else
     {
-        lastTFPrintMs = now;
+        unsigned long now = millis();
 
-        TF_F_DISTANCE = getDistance(TF_F);
-        TF_L_DISTANCE = getDistance(TF_L);
-        TF_R_DISTANCE = getDistance(TF_R);
-
-        Serial.print("F: ");
-        Serial.print(TF_F_DISTANCE);
-        Serial.print(" L: ");
-        Serial.print(TF_L_DISTANCE);
-        Serial.print(" R: ");
-        Serial.print(TF_R_DISTANCE);
-        Serial.println();
-
-        if (TF_F_DISTANCE > F_dis_TH)
+        if (now - lastTFPrintMs >= TF_PRINT_PERIOD_MS)
         {
-            forward();
-            setSpeed(speed);
-            if (TF_L_DISTANCE < WALL_DIS_TH)
+            lastTFPrintMs = now;
+
+            TF_F_DISTANCE = getDistance(TF_F);
+            TF_L_DISTANCE = getDistance(TF_L);
+            TF_R_DISTANCE = getDistance(TF_R);
+
+            Serial.print("F: ");
+            Serial.print(TF_F_DISTANCE);
+            Serial.print(" L: ");
+            Serial.print(TF_L_DISTANCE);
+            Serial.print(" R: ");
+            Serial.print(TF_R_DISTANCE);
+            Serial.println();
+
+            if (TF_F_DISTANCE < F_dis_Crash_TH)
             {
-                turn(120); // turn right
+
+                Serial.println("CRASH! STOP");
+                backward();
+                // setSpeed(0);
+                turn(90);
+                delay(1000);
+                stop();
+                // turn(90);
+                setSpeed(0);
+                canStart = false;
+                digitalWrite(LED_BUILTIN, LOW);
+                delay(2000);
+                // turn(90);
             }
-            else if (TF_R_DISTANCE < WALL_DIS_TH)
+
+            if (TF_F_DISTANCE > F_dis_TH)
             {
-                turn(60); // turn left
+                forward();
+                setSpeed(speed);
+                // if (TF_L_DISTANCE < WALL_DIS_TH)
+                // {
+                //     turn(120); // turn right
+                // }
+                // else if (TF_R_DISTANCE < WALL_DIS_TH)
+                // {
+                //     turn(60); // turn left
+                // }
+                // else
+                // {
+                turn(90); // go straight
+                // }
             }
-            else
+            else // too close to front wall, turn
             {
+                char turnDirection;
+                // stop();
+                delay(100);
+                if (TF_L_DISTANCE > TF_R_DISTANCE)
+                {
+                    turn(60); // turn left
+                    Serial.println("TURN LEFT");
+                    turnDirection = 'L';
+                }
+                else
+                {
+                    turn(120); // turn right
+                    Serial.println("TURN RIGHT");
+                    turnDirection = 'R';
+                }
+                // delay(100);
+                forward();
+                setSpeed(speed);
+                delay(TURN_TIME_MS);
+
+                // // turn until L and R are similar distance (10% tolerance) or timeout 2s
+                // unsigned long startTime = millis();
+                // while (millis() - startTime < 2000)
+                // {
+                //     TF_L_DISTANCE = getDistance(TF_L);
+                //     TF_R_DISTANCE = getDistance(TF_R);
+                //     if (abs(TF_L_DISTANCE - TF_R_DISTANCE) < 0.2 * TF_R_DISTANCE)
+                //     {
+                //         break;
+                //     }
+                // }
+
+                // continue turning until the outer sensor distance starts to increase
+                int outerSensor = (turnDirection == 'L') ? TF_R : TF_L;
+                int previousOuterDistance = getDistance(outerSensor);
+                while (true)
+                {
+                    int currentOuterDistance = getDistance(outerSensor);
+                    if (currentOuterDistance > previousOuterDistance)
+                    {
+                        break;
+                    }
+                    previousOuterDistance = currentOuterDistance;
+                }
+
+                // try to correct the angle a bit
+                setSpeed(180);
+                if (turnDirection == 'L')
+                    turn(120); // turn right
+                else
+                    turn(60); // turn left
+                delay(20);
                 turn(90); // go straight
             }
-        }
-        else // too close to front wall, turn
-        {
-            char turnDirection;
-            // stop();
-            delay(100);
-            if (TF_L_DISTANCE > TF_R_DISTANCE)
-            {
-                turn(60); // turn left
-                Serial.println("TURN LEFT");
-                turnDirection = 'L';
-            }
-            else
-            {
-                turn(120); // turn right
-                Serial.println("TURN RIGHT");
-                turnDirection = 'R';
-            }
-            // delay(100);
-            forward();
-            setSpeed(speed);
-            delay(TURN_TIME_MS);
 
-            // // turn until L and R are similar distance (10% tolerance) or timeout 2s
-            // unsigned long startTime = millis();
-            // while (millis() - startTime < 2000)
+            // for ()
             // {
-            //     TF_L_DISTANCE = getDistance(TF_L);
-            //     TF_R_DISTANCE = getDistance(TF_R);
-            //     if (abs(TF_L_DISTANCE - TF_R_DISTANCE) < 0.2 * TF_R_DISTANCE)
+            //     uint8_t addr = SENSOR_ADDRS[i];
+            //     int distance = getDistance(addr);
+
+            //     Serial.print(SENSOR_NAMES[i]);
+            //     Serial.print(" (0x");
+            //     if (addr < 16)
+            //         Serial.print('0');
+            //     Serial.print(addr, HEX);
+            //     Serial.print("): ");
+            //     if (distance >= 0)
             //     {
-            //         break;
+            //         Serial.print(distance);
+            //         Serial.println(" mm");
+            //     }
+            //     else
+            //     {
+            //         Serial.println("Error");
             //     }
             // }
-            
-            // continue turning until the outer sensor distance starts to increase
-            int outerSensor = (turnDirection == 'L') ? TF_R : TF_L;
-            int previousOuterDistance = getDistance(outerSensor);
-            while (true)
-            {
-                int currentOuterDistance = getDistance(outerSensor);
-                if (currentOuterDistance > previousOuterDistance)
-                {
-                    break;
-                }
-                previousOuterDistance = currentOuterDistance;
-            }
-
-            // try to correct the angle a bit
-            setSpeed(180);
-            if (turnDirection == 'L')
-                turn(120); // turn right
-            else
-                turn(60); // turn left
-            delay(20);
-            turn(90); // go straight
-            
+            // Serial.println();
         }
-
-        // for ()
-        // {
-        //     uint8_t addr = SENSOR_ADDRS[i];
-        //     int distance = getDistance(addr);
-
-        //     Serial.print(SENSOR_NAMES[i]);
-        //     Serial.print(" (0x");
-        //     if (addr < 16)
-        //         Serial.print('0');
-        //     Serial.print(addr, HEX);
-        //     Serial.print("): ");
-        //     if (distance >= 0)
-        //     {
-        //         Serial.print(distance);
-        //         Serial.println(" mm");
-        //     }
-        //     else
-        //     {
-        //         Serial.println("Error");
-        //     }
-        // }
-        // Serial.println();   
-
-    }
     }
     // THIS IS FOR DEBUGGING VIA SERIAL MONITOR, (RC CAR MODE)
     char input;
@@ -396,6 +415,24 @@ void loop()
             ledcWrite(EN, speed);
             Serial.println(speed);
             break;
+        case 'p':
+            if (!canStart)
+            {
+                canStart = true;
+                setSpeed(speed);
+                digitalWrite(LED_BUILTIN, HIGH);
+                delay(2000);
+                turn(90);
+            }
+            else if (canStart)
+            {
+                canStart = false;
+                stop();
+                setSpeed(0);
+                digitalWrite(LED_BUILTIN, LOW);
+                delay(2000);
+                turn(90);
+            }
         default:
             ledcWrite(EN, 0);
             digitalWrite(FW, LOW);
@@ -404,5 +441,5 @@ void loop()
         }
     }
 
-    delay(5); 
+    delay(5);
 }
