@@ -21,8 +21,8 @@ const size_t NUM_SENSORS = sizeof(SENSOR_ADDRS) / sizeof(SENSOR_ADDRS[0]);
 const int SDA_PIN = 21;
 const int SCL_PIN = 22;
 
-const unsigned long READ_PERIOD_MS = 20; // 50 Hz do not go above 100Hz
-unsigned long lastReadMs = 0;
+const unsigned long TF_READ_PERIOD_MS = 20; // 50 Hz do not go above 100Hz
+unsigned long lastTFReadMs = 0;
 
 const unsigned long TF_PRINT_PERIOD_MS = 100; // print every 100 ms
 unsigned long lastTFPrintMs = 0;
@@ -34,10 +34,10 @@ int servoAngle = 90;
 int speed = 230; // 0-255
 bool canStart = false;
 
-const int F_dis_TH = 130;      // cm
-const int F_dis_Crash_TH = 20; // cm
-const int WALL_DIS_TH = 30;    // cm
-const int TURN_TIME_MS = 800;  // ms; minimum time to turn
+const int F_dis_TH = 120;      // cm
+const int F_dis_Crash_TH = 35; // cm
+const int WALL_DIS_TH = 85;    // cm
+const int TURN_TIME_MS = 2500;  // ms; minimum time to turn
 
 bool STATUS_LED_STATUS = false;
 
@@ -222,9 +222,9 @@ void loop()
     {
         unsigned long now = millis();
 
-        if (now - lastTFPrintMs >= TF_PRINT_PERIOD_MS)
+        if (now - lastTFReadMs >= TF_READ_PERIOD_MS)
         {
-            lastTFPrintMs = now;
+            lastTFReadMs = now;
 
             TF_F_DISTANCE = getDistance(TF_F);
             TF_L_DISTANCE = getDistance(TF_L);
@@ -240,19 +240,17 @@ void loop()
 
             if (TF_F_DISTANCE < F_dis_Crash_TH)
             {
-
                 Serial.println("CRASH! STOP");
                 backward();
-                // setSpeed(0);
-                turn(90);
-                delay(1000);
+                setSpeed(speed);
+                delay(200);
                 stop();
-                // turn(90);
                 setSpeed(0);
+                turn(90);
                 canStart = false;
                 digitalWrite(LED_BUILTIN, LOW);
                 delay(2000);
-                // turn(90);
+                return; // wait for manual restart
             }
 
             if (TF_F_DISTANCE > F_dis_TH)
@@ -276,8 +274,11 @@ void loop()
             {
                 char turnDirection;
                 // stop();
-                delay(100);
-                if (TF_L_DISTANCE > TF_R_DISTANCE)
+                backward();
+                setSpeed(255);
+                delay(1000);
+                // delay(100);
+                if (TF_L_DISTANCE > TF_R_DISTANCE && TF_L_DISTANCE > WALL_DIS_TH)
                 {
                     turn('L'); // turn left
                     Serial.println("TURN LEFT");
