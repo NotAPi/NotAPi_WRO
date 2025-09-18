@@ -80,13 +80,24 @@ void setSpeed(int spd)
     ledcWrite(EN, spd);
 }
 
-void turn(int angle)
+void turn(int angle) // for int
 {
+    Serial.println(angle);
     if (angle < 60)
         angle = 60;
     if (angle > 120)
         angle = 120;
     driveServo.write(angle);
+}
+
+void turn(char dir) // for char
+{
+    if (dir == 'L')
+        turn(120);
+    else if (dir == 'R')
+        turn(60);
+    else
+        turn(90);
 }
 
 void setup()
@@ -268,13 +279,13 @@ void loop()
                 delay(100);
                 if (TF_L_DISTANCE > TF_R_DISTANCE)
                 {
-                    turn(60); // turn left
+                    turn('L'); // turn left
                     Serial.println("TURN LEFT");
                     turnDirection = 'L';
                 }
                 else
                 {
-                    turn(120); // turn right
+                    turn('R'); // turn right
                     Serial.println("TURN RIGHT");
                     turnDirection = 'R';
                 }
@@ -310,10 +321,10 @@ void loop()
 
                 // try to correct the angle a bit
                 setSpeed(180);
-                if (turnDirection == 'L')
-                    turn(120); // turn right
-                else
-                    turn(60); // turn left
+                // if (turnDirection == 'L')
+                //     turn('R'); // turn left
+                // else
+                //     turn('L'); // turn right
                 delay(20);
                 turn(90); // go straight
             }
