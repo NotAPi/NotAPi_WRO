@@ -36,7 +36,7 @@ bool canStart = false;
 
 const int F_dis_TH = 130; // cm
 const int WALL_DIS_TH = 30; // cm 
-const int TURN_TIME_MS = 2000; // ms
+const int TURN_TIME_MS = 600; // ms; minimum time to turn
 
 bool STATUS_LED_STATUS = false;
 
@@ -242,22 +242,60 @@ void loop()
         }
         else // too close to front wall, turn
         {
+            char turnDirection;
             // stop();
             delay(100);
             if (TF_L_DISTANCE > TF_R_DISTANCE)
             {
                 turn(60); // turn left
                 Serial.println("TURN LEFT");
+                turnDirection = 'L';
             }
             else
             {
                 turn(120); // turn right
                 Serial.println("TURN RIGHT");
+                turnDirection = 'R';
             }
             // delay(100);
             forward();
             setSpeed(speed);
             delay(TURN_TIME_MS);
+
+            // // turn until L and R are similar distance (10% tolerance) or timeout 2s
+            // unsigned long startTime = millis();
+            // while (millis() - startTime < 2000)
+            // {
+            //     TF_L_DISTANCE = getDistance(TF_L);
+            //     TF_R_DISTANCE = getDistance(TF_R);
+            //     if (abs(TF_L_DISTANCE - TF_R_DISTANCE) < 0.2 * TF_R_DISTANCE)
+            //     {
+            //         break;
+            //     }
+            // }
+            
+            // continue turning until the outer sensor distance starts to increase
+            int outerSensor = (turnDirection == 'L') ? TF_R : TF_L;
+            int previousOuterDistance = getDistance(outerSensor);
+            while (true)
+            {
+                int currentOuterDistance = getDistance(outerSensor);
+                if (currentOuterDistance > previousOuterDistance)
+                {
+                    break;
+                }
+                previousOuterDistance = currentOuterDistance;
+            }
+
+            // try to correct the angle a bit
+            setSpeed(180);
+            if (turnDirection == 'L')
+                turn(120); // turn right
+            else
+                turn(60); // turn left
+            delay(20);
+            turn(90); // go straight
+            
         }
 
         // for ()
