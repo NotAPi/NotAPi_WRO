@@ -272,11 +272,15 @@ void loop()
                         stuck++;
 
                     }
+                    if (stuck != 0)
+                    {
+                        backward();
+                        delay(500);
+                    }
                 }
 
                 if (stuck == 1 )
                 {
-                    
                 }
                 stop();
                 setSpeed(0);
