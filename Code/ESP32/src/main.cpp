@@ -33,13 +33,16 @@ Servo driveServo;
 int servoAngle = 90;
 int speed = 230; // 0-255
 bool canStart = false;
+int stuckCounter = 0;
+const int unstuckSpeed = 255;
 
-const int F_dis_TH = 120;      // cm
-const int F_dis_Crash_TH = 40; // cm
+
+const int F_dis_TH = 120;         // cm
+const int F_dis_Crash_TH = 40;    // cm
 const int Min_Distance_turn = 80; // cm
-const int WALL_DIS_TH = 85;    // cm
-const int TURN_TIME_MS = 2500;  // ms; minimum time to turn
-
+const int WALL_DIS_TH = 85;       // cm
+const int TURN_TIME_MS = 2500;    // ms; minimum time to turn
+const int forwardSince = 0;
 bool STATUS_LED_STATUS = false;
 
 const int MOTOR_PWM_CH = 8;
@@ -252,14 +255,15 @@ void loop()
                     int prevDistance = getDistance(TF_F);
                     delay(50);
                     if (prevDistance - getDistance(TF_F) < 5) // if not getting away, break
-                        {
-                            setSpeed(255);
-                        }
-                    
+                    {
+                        setSpeed(255);
+                    }
+
                     if (millis() - startTime > 8000)
                     {
                         canStart = false; // if stuck for 8s, stop
-                    }else if (millis() - startTime > 2000)
+                    }
+                    else if (millis() - startTime > 2000)
                     {
                         setSpeed(255); // after 2s, go full speed
                         backward();
@@ -268,9 +272,8 @@ void loop()
                         delay(500);
                         backward();
                         delay(500);
-                        
-                        stuck++;
 
+                        stuck++;
                     }
                     if (stuck != 0)
                     {
@@ -279,7 +282,7 @@ void loop()
                     }
                 }
 
-                if (stuck == 1 )
+                if (stuck == 1)
                 {
                 }
                 stop();
@@ -290,9 +293,36 @@ void loop()
                 delay(2000);
                 return; // wait for manual restart
             }
+            else if (prevMainFDistance - TF_F_DISTANCE > 1 /*&& forwardSince > 3000*/)
+            {
+                Serial.println("POSSIBLY STUCK");
+                stuckCounter++;
+                if (stuckCounter > 3)
+                {
+                    Serial.println("STUCK! ");
+                    stuckCounter = 3; // max 3
+                    while (prevMainFDistance - TF_F_DISTANCE > 2)
+                    {
+                        Serial.println("STUCK! UNSTUCKING");
+                        TF_F_DISTANCE = getDistance(TF_F);
+                        delay(50);
+                        setSpeed(unstuckSpeed);
+                        backward();
+                        delay(500);
+                        forward();
+                        delay(500);
+                        backward();
+                        delay(1000);
+                        setSpeed(speed);
+                    }
+                    stuckCounter = 0;
+                }
+                return;
+            }
 
             if (TF_F_DISTANCE > F_dis_TH)
             {
+
                 forward();
                 setSpeed(speed);
                 // if (TF_L_DISTANCE < WALL_DIS_TH)
@@ -315,6 +345,13 @@ void loop()
                 backward();
                 setSpeed(255);
                 delay(1000);
+                while (getDistance(TF_F) < Min_Distance_turn)
+                {
+                    int prevDistance = getDistance(TF_F);
+                    delay(50);
+                    if (prevDistance - getDistance(TF_F) < 5) // if not getting away, break
+                        break;
+                }
                 // delay(100);
                 if (TF_L_DISTANCE > TF_R_DISTANCE && TF_L_DISTANCE > WALL_DIS_TH)
                 {
