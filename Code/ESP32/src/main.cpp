@@ -35,7 +35,8 @@ int speed = 230; // 0-255
 bool canStart = false;
 
 const int F_dis_TH = 120;      // cm
-const int F_dis_Crash_TH = 35; // cm
+const int F_dis_Crash_TH = 40; // cm
+const int Min_Distance_turn = 80; // cm
 const int WALL_DIS_TH = 85;    // cm
 const int TURN_TIME_MS = 2500;  // ms; minimum time to turn
 
@@ -225,7 +226,7 @@ void loop()
         if (now - lastTFReadMs >= TF_READ_PERIOD_MS)
         {
             lastTFReadMs = now;
-
+            int prevMainFDistance = TF_F_DISTANCE;
             TF_F_DISTANCE = getDistance(TF_F);
             TF_L_DISTANCE = getDistance(TF_L);
             TF_R_DISTANCE = getDistance(TF_R);
@@ -240,14 +241,47 @@ void loop()
 
             if (TF_F_DISTANCE < F_dis_Crash_TH)
             {
+                int stuck = 0;
                 Serial.println("CRASH! STOP");
                 backward();
                 setSpeed(speed);
                 delay(200);
+                int startTime = millis();
+                while (getDistance(TF_F) < Min_Distance_turn)
+                {
+                    int prevDistance = getDistance(TF_F);
+                    delay(50);
+                    if (prevDistance - getDistance(TF_F) < 5) // if not getting away, break
+                        {
+                            setSpeed(255);
+                        }
+                    
+                    if (millis() - startTime > 8000)
+                    {
+                        canStart = false; // if stuck for 8s, stop
+                    }else if (millis() - startTime > 2000)
+                    {
+                        setSpeed(255); // after 2s, go full speed
+                        backward();
+                        delay(500);
+                        forward();
+                        delay(500);
+                        backward();
+                        delay(500);
+                        
+                        stuck++;
+
+                    }
+                }
+
+                if (stuck == 1 )
+                {
+                    
+                }
                 stop();
                 setSpeed(0);
                 turn(90);
-                canStart = false;
+                // canStart = false;
                 digitalWrite(LED_BUILTIN, LOW);
                 delay(2000);
                 return; // wait for manual restart
