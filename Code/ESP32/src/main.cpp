@@ -43,6 +43,7 @@ const int Min_Distance_turn = 80; // cm
 const int WALL_DIS_TH = 85;       // cm
 const int TURN_TIME_MS = 2500;    // ms; minimum time to turn
 const int forwardSince = 0;
+const int Max_Speed = 150; // cm/s
 bool STATUS_LED_STATUS = false;
 
 const int MOTOR_PWM_CH = 8;
@@ -57,6 +58,12 @@ const size_t FRONT_DISTANCE_HISTORY = 3;
 int frontDistanceHistory[FRONT_DISTANCE_HISTORY] = {-1, -1, -1};
 size_t frontDistanceHistoryIndex = 0;
 size_t frontDistanceHistoryCount = 0;
+unsigned long frontDistanceTimeHistory[FRONT_DISTANCE_HISTORY] = {0};
+
+void setSpeed(int spd)
+{
+    ledcWrite(EN, spd);
+}
 
 int getDistance(uint8_t addr)
 {
@@ -66,8 +73,44 @@ int getDistance(uint8_t addr)
     return dist;
 }
 
+float getSpeed()
+{
+    if (frontDistanceHistoryCount < 2)
+    {
+        return 0.0f;
+    }
+
+    size_t newestIndex = (frontDistanceHistoryIndex + FRONT_DISTANCE_HISTORY - 1) % FRONT_DISTANCE_HISTORY;
+    size_t oldestIndex = (frontDistanceHistoryCount == FRONT_DISTANCE_HISTORY) ? frontDistanceHistoryIndex : 0;
+
+    unsigned long newestTime = frontDistanceTimeHistory[newestIndex];
+    unsigned long oldestTime = frontDistanceTimeHistory[oldestIndex];
+
+    if (newestTime <= oldestTime)
+    {
+        return 0.0f;
+    }
+
+    int newestDistance = frontDistanceHistory[newestIndex];
+    int oldestDistance = frontDistanceHistory[oldestIndex];
+
+    float distanceDelta = static_cast<float>(oldestDistance - newestDistance);
+    float timeDeltaSeconds = (newestTime - oldestTime) / 1000.0f;
+
+    return distanceDelta / timeDeltaSeconds;
+}
+
 void forward()
 {
+    // limit speed to MAX_Speed
+    if (getSpeed() > Max_Speed)
+    {
+        setSpeed(0);
+    }
+    else {
+        setSpeed(speed);
+    }
+
     digitalWrite(FW, HIGH);
     digitalWrite(BW, LOW);
 }
@@ -84,10 +127,7 @@ void stop()
     digitalWrite(BW, LOW);
 }
 
-void setSpeed(int spd)
-{
-    ledcWrite(EN, spd);
-}
+
 
 void turn(int angle) // for int
 {
@@ -252,6 +292,7 @@ void loop()
             TF_R_DISTANCE = getDistance(TF_R);
 
             frontDistanceHistory[frontDistanceHistoryIndex] = TF_F_DISTANCE;
+            frontDistanceTimeHistory[frontDistanceHistoryIndex] = now;
             frontDistanceHistoryIndex = (frontDistanceHistoryIndex + 1) % FRONT_DISTANCE_HISTORY;
             if (frontDistanceHistoryCount < FRONT_DISTANCE_HISTORY)
             {
@@ -264,7 +305,9 @@ void loop()
             Serial.print(TF_L_DISTANCE);
             Serial.print(" R: ");
             Serial.print(TF_R_DISTANCE);
-            Serial.println();
+            Serial.print(" Speed: ");
+            Serial.print(getSpeed());
+            Serial.println(" cm/s");
 
             if (TF_F_DISTANCE < F_dis_Crash_TH)
             {
@@ -272,13 +315,13 @@ void loop()
                 Serial.println("CRASH! STOP");
                 backward();
                 setSpeed(speed);
-                delay(200);
+                delay(100);
                 int startTime = millis();
                 while (getDistance(TF_F) < Min_Distance_turn)
                 {
                     int prevDistance = getDistance(TF_F);
                     delay(50);
-                    if (prevDistance - getDistance(TF_F) < 5) // if not getting away, break
+                    if (prevDistance - getDistance(TF_F) < 2) // if not getting away, break
                     {
                         setSpeed(255);
                     }
@@ -289,7 +332,7 @@ void loop()
                     }
                     else if (millis() - startTime > 2000)
                     {
-                        setSpeed(255); // after 2s, go full speed
+                        // setSpeed(255); // after 2s, go full speed
                         backward();
                         delay(500);
                         forward();
