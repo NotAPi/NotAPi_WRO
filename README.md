@@ -1,7 +1,7 @@
 # NotAPi_WRO_2025
 
 ![image1](Pictures/Vehicle/carFinal.jpeg)
-![teamPhoto](https://raw.githubusercontent.com/NotAPi/NotAPi_WRO/refs/heads/2025/Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg)
+<!-- ![teamPhoto](https://raw.githubusercontent.com/NotAPi/NotAPi_WRO/refs/heads/2025/Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg) -->
 
 ## 1. Mobility Management
 
