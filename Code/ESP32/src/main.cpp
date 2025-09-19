@@ -370,10 +370,10 @@ void loop()
                 {
                     int prevDistance = getDistance(TF_F);
                     delay(50);
-                    if (prevDistance - getDistance(TF_F) < 2) // if not getting away, break
-                    {
-                        setSpeed(255);
-                    }
+                    // if (getSpeed() < 10) // if not getting away, break
+                    // {
+                    //     setSpeed(255);
+                    // }
 
                     if (millis() - startTime > 8000)
                     {
@@ -406,7 +406,7 @@ void loop()
                 turn(90);
                 // canStart = false;
                 digitalWrite(LED_BUILTIN, LOW);
-                delay(2000);
+                delay(500);
                 return; // wait for manual restart
             }
             // else if (historyCountBeforeUpdate == FRONT_DISTANCE_HISTORY &&
@@ -460,7 +460,7 @@ void loop()
                 char turnDirection;
                 // stop();
                 backward();
-                setSpeed(unstuckSpeed);
+                setSpeed(200);
                 delay(1000);
                 while (getDistance(TF_F) < Min_Distance_turn)
                 {
@@ -472,7 +472,7 @@ void loop()
 
                 // delay(100);
                 int prevTurnDistance = getDistance(TF_F);
-                if (TF_L_DISTANCE > TF_R_DISTANCE && TF_L_DISTANCE > WALL_DIS_TH)
+                if (TF_L_DISTANCE > TF_R_DISTANCE) //&& TF_L_DISTANCE > WALL_DIS_TH)
                 {
                     turn('L'); // turn left
                     Serial.println("TURN LEFT");
