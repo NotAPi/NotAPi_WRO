@@ -36,10 +36,10 @@ bool canStart = false;
 int stuckCounter = 0;
 const int unstuckSpeed = 255;
 
-const int F_dis_TH = 100;         // cm
+const int F_dis_TH = 90;         // cm
 const int F_dis_Crash_TH = 35;    // cm
 const int Min_Distance_turn = 45; // cm
-const int WALL_DIS_TH = 80;       // cm
+const int WALL_DIS_TH = 50;       // cm
 const int TURN_TIME_MS = 2500;    // ms; minimum time to turn
 const int forwardSince = 0;
 const int Max_Speed = 200; // cm/s // ik it low but
