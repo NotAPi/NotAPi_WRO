@@ -1,6 +1,6 @@
 # NotAPi_WRO_2025
 
-![image1](resources/newimage.jpg)
+![image1](Pictures/Vehicle/carFinal.jpeg)
 ![teamPhoto](https://raw.githubusercontent.com/NotAPi/NotAPi_WRO/refs/heads/2025/Pictures/Team/Imagen%20de%20WhatsApp%202024-05-25%20a%20las%2009.47.15_d164381c.jpg)
 
 ## 1. Mobility Management
@@ -65,11 +65,10 @@ A schematic of the electrical connections can be found [here](resources/schemati
 
 The car autonomously navigates by:
 
-- Moving forward until the front LIDAR detects an obstacle closer than 140 cm.
-- Upon detecting an obstacle, it compares the distances from the left and right LIDARs
-- It turns towards the side with the greater distance.
-- After turning, it aligns itself parallel to the outer wall using the side LIDARs (not yet implemented).
-- This process is repeated until the car has completed 12 turns, at which point it stops.
+- Moving forward until the front LIDAR (TF-Mini) reports an obstacle closer than 90 cm.
+- When the front distance drops below 90 cm it checks for an imminent crash (< 30 cm); if so, it reverses at full speed until the distance is greater than 40 cm, then, continues.
+- Otherwise, it looks at both side sensors, goes back for roughly 1s to make room, and then steers towards the side with the greater distance while going forward for 2.5s while watching the front to avoid collisions.
+- After the turn, it recenters the steering and returns to the forward loop.
 
 ### Flow Chart
 
@@ -77,23 +76,41 @@ This can be summarized in the following flow chart:
 
 ```mermaid
 flowchart TD
-  Start([Start]) --> Forward[Move forward]
-  Forward --> Fdist{Front distance < 140 cm?}
-  Fdist -- Yes --> Forward
-  Fdist -- No --> SideCheck{Left distance > Right distance?}
-  SideCheck -- Yes --> TurnLeft[Turn left]
-  SideCheck -- No --> TurnRight[Turn right]
-  TurnLeft --> Align["Align parallel to outer wall (not yet implemented)"]
-  TurnRight --> Align
-  Align --> Count{Turns completed = 12?}
-  Count -- No --> Forward
-  Count -- Yes --> Stop([Stop])
+  Start([Start]) --> Forward[Drive forward]
+  Forward --> Fdist{Front distance < 90 cm?}
+  Fdist -- No --> Forward
+  Fdist -- Yes --> CrashCheck{Front < 30 cm?}
+  CrashCheck -- Yes --> CrashRecover[Reverse until front > 40 cm]
+  CrashRecover --> Forward
+  CrashCheck -- No --> SideCheck{Left distance > Right distance?}
+  SideCheck -- Yes --> TurnLeft[Reverse 1 s, steer left]
+  SideCheck -- No --> TurnRight[Reverse 1 s, steer right]
+  TurnLeft --> TurnExec[Drive turn for 2.5 s
+   while monitoring front distance]
+  TurnRight --> TurnExec
+  TurnExec --> Forward
 ```
 
 ### Code Implementation
 
 All this logic is implemented in the `main.cpp` file, which can be found [here](Code/ESP32/src/main.cpp).
 For this project, we used the Arduino framework via PlatformIO, which simplified the development process significantly and allowed us to use existing Arduino libraries.
+
+### Status LED Reference
+
+The code also includes a list of status codes represented by the onboard LED:
+
+- Startup: 5× rapid flashes (one-shot) - firmware just booted.
+- SensorsInit: 3× medium flashes (one-shot) - sensor bus is being initialised.
+- Idle / Ready: 1× short flash every ~0.8 s (repeating) - safe to press Start.
+- DrivingForward: 2× short flashes (one-shot) - drivetrain commanded forward.
+- TurningLeft: 3× short flashes with tight spacing (one-shot) - left turn routine.
+- TurningRight: 3× short flashes with wider spacing (one-shot) - right turn routine.
+- CrashRecovery: 5× very quick flashes (one-shot) - collision escape in progress.
+- ForwardStuck: 4× short flashes (one-shot) - forward motion failed, backing up.
+- ManualPause: 2× medium flashes with pause (repeating) - RC/manual mode active.
+- Error: 1× long flash, long pause (repeating) - unrecoverable error, needs attention.
+
 
 ##### Uploaded to the ESP32
 
@@ -143,3 +160,7 @@ To upload the code to the ESP32, you need to have [PlatformIO CLI](https://platf
 [Demo2](https://hc-cdn.hel1.your-objectstorage.com/s/v3/c7cb69626a8cc83b544aa8f92fb21f2a090f1fee_pxl_20250423_193522126_2.mp4)
 
 [Demo3](https://hc-cdn.hel1.your-objectstorage.com/s/v3/c7cb69626a8cc83b544aa8f92fb21f2a090f1fee_pxl_20250423_193522126_2.mp4)
+
+
+---
+_AI assistance:_ ChatGPT-5 (OpenAI) helped with part of the code, mainly the LightStatus functions and the `getSpeed()` function.
