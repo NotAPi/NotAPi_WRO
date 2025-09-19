@@ -53,6 +53,11 @@ int TF_F_DISTANCE;
 int TF_L_DISTANCE;
 int TF_R_DISTANCE;
 
+const size_t FRONT_DISTANCE_HISTORY = 3;
+int frontDistanceHistory[FRONT_DISTANCE_HISTORY] = {-1, -1, -1};
+size_t frontDistanceHistoryIndex = 0;
+size_t frontDistanceHistoryCount = 0;
+
 int getDistance(uint8_t addr)
 {
     int16_t dist = 0, flux = 0, temp = 0;
@@ -229,10 +234,29 @@ void loop()
         if (now - lastTFReadMs >= TF_READ_PERIOD_MS)
         {
             lastTFReadMs = now;
-            int prevMainFDistance = TF_F_DISTANCE;
+            size_t historyCountBeforeUpdate = frontDistanceHistoryCount;
+            int prevFrontMaxDistance = -1;
+            if (frontDistanceHistoryCount > 0)
+            {
+                prevFrontMaxDistance = frontDistanceHistory[0];
+                for (size_t i = 1; i < frontDistanceHistoryCount; ++i)
+                {
+                    if (frontDistanceHistory[i] > prevFrontMaxDistance)
+                    {
+                        prevFrontMaxDistance = frontDistanceHistory[i];
+                    }
+                }
+            }
             TF_F_DISTANCE = getDistance(TF_F);
             TF_L_DISTANCE = getDistance(TF_L);
             TF_R_DISTANCE = getDistance(TF_R);
+
+            frontDistanceHistory[frontDistanceHistoryIndex] = TF_F_DISTANCE;
+            frontDistanceHistoryIndex = (frontDistanceHistoryIndex + 1) % FRONT_DISTANCE_HISTORY;
+            if (frontDistanceHistoryCount < FRONT_DISTANCE_HISTORY)
+            {
+                frontDistanceHistoryCount++;
+            }
 
             Serial.print("F: ");
             Serial.print(TF_F_DISTANCE);
@@ -293,7 +317,8 @@ void loop()
                 delay(2000);
                 return; // wait for manual restart
             }
-            else if (prevMainFDistance - TF_F_DISTANCE > 1 /*&& forwardSince > 3000*/)
+            else if (historyCountBeforeUpdate == FRONT_DISTANCE_HISTORY &&
+                     prevFrontMaxDistance - TF_F_DISTANCE > 1 /*&& forwardSince > 3000*/) // possibly stuck detect
             {
                 Serial.println("POSSIBLY STUCK");
                 stuckCounter++;
@@ -301,7 +326,7 @@ void loop()
                 {
                     Serial.println("STUCK! ");
                     stuckCounter = 3; // max 3
-                    while (prevMainFDistance - TF_F_DISTANCE > 2)
+                    while (prevFrontMaxDistance - TF_F_DISTANCE > 2)
                     {
                         Serial.println("STUCK! UNSTUCKING");
                         TF_F_DISTANCE = getDistance(TF_F);
