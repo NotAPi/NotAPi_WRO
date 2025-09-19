@@ -3,6 +3,8 @@
 #include <ESP32Servo.h>
 #include <TFMPI2C.h>
 
+#include "lightCodes.h"
+
 #define EN 25
 #define FW 27
 #define BW 26
@@ -38,13 +40,12 @@ const int unstuckSpeed = 255;
 
 const int F_dis_TH = 90;         // cm
 const int F_dis_Crash_TH = 30;    // cm
-const int F_dis_uncrash_TH = 50; // cm
+const int F_dis_uncrash_TH = 40; // cm
 const int Min_Distance_turn = 70; // cm
 const int WALL_DIS_TH = 60;       // cm
 const int TURN_TIME_MS = 2500;    // ms; minimum time to turn
 const int forwardSince = 0;
 const int Max_Speed = 200; // cm/s // ik it low but
-bool STATUS_LED_STATUS = false;
 
 const int MOTOR_PWM_CH = 8;
 const int MOTOR_PWM_FREQ = 5000;
@@ -59,20 +60,6 @@ int frontDistanceHistory[FRONT_DISTANCE_HISTORY] = {-1, -1, -1, -1, -1, -1, -1, 
 size_t frontDistanceHistoryIndex = 0;
 size_t frontDistanceHistoryCount = 0;
 unsigned long frontDistanceTimeHistory[FRONT_DISTANCE_HISTORY] = {0};
-
-void flashStatusLED(uint8_t flashes, uint16_t onMs, uint16_t offMs)
-{
-    for (uint8_t i = 0; i < flashes; ++i)
-    {
-        digitalWrite(LED_BUILTIN, HIGH);
-        delay(onMs);
-        digitalWrite(LED_BUILTIN, LOW);
-        if (i + 1U < flashes)
-        {
-            delay(offMs);
-        }
-    }
-}
 
 void clearFrontDistanceHistory()
 {
@@ -239,13 +226,13 @@ bool checkIfStuck()
 void attemptForwardUnstuck()
 {
     Serial.println("FORWARD STUCK - REVERSING");
-    flashStatusLED(4, 80, 80);
+    setStatus(StatusCode::ForwardStuck);
     backward();
     setSpeed(unstuckSpeed);
-    delay(500);
+    delayWithStatusLEDUpdate(500);
     stop();
     setSpeed(0);
-    delay(200);
+    delayWithStatusLEDUpdate(200);
     clearFrontDistanceHistory();
 }
 
@@ -256,25 +243,25 @@ void setup()
     ESP32PWM::allocateTimer(3); // PWM timer 3
     Serial.begin(115200);
     Serial.println("Hello World!");
-    delay(1000);
+    initStatusLED();
+    setStatus(StatusCode::Startup);
+    printStatusList(Serial);
+    delayWithStatusLEDUpdate(1000);
     // driveServo.attach(ServoPin);
     if (driveServo.attach(ServoPin) < 0) // some servo fix ?
     {
         driveServo.detach();
         ledcDetach(ServoPin);
-        delay(100);
+        delayWithStatusLEDUpdate(100);
         driveServo.attach(ServoPin);
     }
-    delay(2000);
+    delayWithStatusLEDUpdate(2000);
     driveServo.write(90); // Center the servo
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
-
     // Initialize I2C bus and recover if needed
     tfm.recoverI2CBus(SDA_PIN, SCL_PIN);
     Wire.setClock(400000); // 400kHz I2C
-    delay(100);
-    digitalWrite(LED_BUILTIN, LOW); // Turn the LED off
+    delayWithStatusLEDUpdate(100);
+    setStatus(StatusCode::SensorsInit);
 
     // Send example commands to all TFMini-Plus sensors
     for (size_t i = 0; i < NUM_SENSORS; ++i)
@@ -296,7 +283,7 @@ void setup()
             tfm.printReply();
         }
 
-        delay(50);
+        delayWithStatusLEDUpdate(50);
 
         Serial.print("Sensor @0x");
         if (addr < 16)
@@ -317,8 +304,8 @@ void setup()
             tfm.printReply();
         }
     }
-    delay(10);
-    digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
+    delayWithStatusLEDUpdate(10);
+    setStatus(StatusCode::Idle);
 
     pinMode(EN, OUTPUT);                                      // EN Pin
     ledcAttachChannel(EN, MOTOR_PWM_FREQ, MOTOR_PWM_RES, 10); // EN Pin
@@ -329,29 +316,29 @@ void setup()
     digitalWrite(EN, LOW);
     digitalWrite(FW, LOW);
     digitalWrite(BW, LOW);
-
-    digitalWrite(LED_BUILTIN, LOW); // Turn the LED off
 }
 
 void loop()
 {
+    updateStatusLED();
+
     // Non-blocking periodic read/print of all TF-Mini sensors every second
     if (digitalRead(StartButtonPin) == LOW && !canStart)
     {
         canStart = true;
         setSpeed(speed);
-        digitalWrite(LED_BUILTIN, HIGH);
-        delay(2000);
+        delayWithStatusLEDUpdate(2000);
         turn(90);
+        setStatus(StatusCode::DrivingForward);
     }
     else if (digitalRead(StartButtonPin) == LOW && canStart)
     {
         canStart = false;
         stop();
         setSpeed(0);
-        digitalWrite(LED_BUILTIN, LOW);
-        delay(2000);
+        delayWithStatusLEDUpdate(2000);
         turn(90);
+        setStatus(StatusCode::ManualPause);
     }
 
     // CAR LOGIC ALGORITHM:
@@ -362,9 +349,11 @@ void loop()
     // LOOP
     if (!canStart)
     {
-        STATUS_LED_STATUS = !STATUS_LED_STATUS;
-        delay(100);
-        digitalWrite(LED_BUILTIN, STATUS_LED_STATUS); // Turn the LED off
+        if (getStatus() != StatusCode::Idle)
+        {
+            setStatus(StatusCode::Idle);
+        }
+        delayWithStatusLEDUpdate(100);
         // return;
     }
     else
@@ -422,7 +411,7 @@ void loop()
                         Serial.print(" ");
                     }
                     Serial.println();
-                    delay(1000);
+                    delayWithStatusLEDUpdate(1000);
                 }
             }
 
@@ -430,14 +419,15 @@ void loop()
             {
                 int stuck = 0;
                 Serial.println("CRASH! STOP");
+                setStatus(StatusCode::CrashRecovery);
                 backward();
                 setSpeed(200);
-                delay(100);
+                delayWithStatusLEDUpdate(100);
                 int startTime = millis();
                 while (getDistance(TF_F) < F_dis_uncrash_TH)
                 {
                     int prevDistance = getDistance(TF_F);
-                    delay(50);
+                    delayWithStatusLEDUpdate(50);
                     // if (getSpeed() < 10) // if not getting away, break
                     // {
                     //     setSpeed(255);
@@ -452,18 +442,18 @@ void loop()
                     {
                         // setSpeed(255); // after 2s, go full speed
                         backward();
-                        delay(700);
+                        delayWithStatusLEDUpdate(700);
                         forward();
-                        delay(500);
+                        delayWithStatusLEDUpdate(500);
                         backward();
-                        delay(700);
+                        delayWithStatusLEDUpdate(700);
 
                         stuck++;
                     }
                     if (stuck != 0)
                     {
                         backward();
-                        delay(500);
+                        delayWithStatusLEDUpdate(500);
                     }
                 }
 
@@ -474,8 +464,7 @@ void loop()
                 setSpeed(0);
                 turn(90);
                 // canStart = false;
-                digitalWrite(LED_BUILTIN, LOW);
-                delay(500);
+                delayWithStatusLEDUpdate(500);
                 return; // wait for manual restart
             }
             // else if (historyCountBeforeUpdate == FRONT_DISTANCE_HISTORY &&
@@ -511,6 +500,7 @@ void loop()
 
                 forward();
                 setSpeed(speed);
+                setStatus(StatusCode::DrivingForward, false);
                 if (isForwardStuck())
                 {
                     attemptForwardUnstuck();
@@ -535,11 +525,11 @@ void loop()
                 // stop();
                 backward();
                 setSpeed(200);
-                delay(1000);
+                delayWithStatusLEDUpdate(1000);
                 while (getDistance(TF_F) < Min_Distance_turn)
                 {
                     int prevDistance = getDistance(TF_F);
-                    delay(50);
+                    delayWithStatusLEDUpdate(50);
                     if (prevDistance - getDistance(TF_F) < 5) // if not getting away, break
                         break;
                 }
@@ -548,12 +538,14 @@ void loop()
                 int prevTurnDistance = getDistance(TF_F);
                 if (TF_L_DISTANCE > TF_R_DISTANCE) //&& TF_L_DISTANCE > WALL_DIS_TH)
                 {
+                    setStatus(StatusCode::TurningLeft);
                     turn('L'); // turn left
                     Serial.println("TURN LEFT");
                     turnDirection = 'L';
                 }
                 else
                 {
+                    setStatus(StatusCode::TurningRight);
                     turn('R'); // turn right
                     Serial.println("TURN RIGHT");
                     turnDirection = 'R';
@@ -561,7 +553,19 @@ void loop()
                 // delay(100);
                 forward();
                 setSpeed(speed);
-                delay(TURN_TIME_MS);
+                int turnStartTime = millis();
+                while ((millis() - turnStartTime) < TURN_TIME_MS)
+                // delay(TURN_TIME_MS);
+                {
+                    delayWithStatusLEDUpdate(50);
+                    // check if crash
+                    if (getDistance(TF_F) < F_dis_Crash_TH)
+                    {
+                        turn(90);
+                        return;
+                    } 
+                }
+                setStatus(StatusCode::DrivingForward);
 
                 if (getSpeed() == 0) // STUCK
                 {
@@ -570,9 +574,9 @@ void loop()
                     while (getSpeed() < 5)
                     {
                         backward();
-                        delay(500);
+                        delayWithStatusLEDUpdate(500);
                         forward();
-                        delay(500);
+                        delayWithStatusLEDUpdate(500);
                     }
                 }
 
@@ -607,7 +611,7 @@ void loop()
                 //     turn('R'); // turn left
                 // else
                 //     turn('L'); // turn right
-                delay(20);
+                delayWithStatusLEDUpdate(20);
                 turn(90); // go straight
             }
 
@@ -652,16 +656,18 @@ void loop()
         {
         case 'w':
             setSpeed(0);
-            delay(100);
+            delayWithStatusLEDUpdate(100);
             forward();
             setSpeed(speed);
+            setStatus(StatusCode::DrivingForward, false);
             break;
 
         case 's':
             setSpeed(0);
-            delay(100);
+            delayWithStatusLEDUpdate(100);
             backward();
             setSpeed(speed);
+            setStatus(StatusCode::ManualPause, false);
             break;
 
         case 'a':
@@ -711,8 +717,8 @@ void loop()
             {
                 canStart = true;
                 setSpeed(speed);
-                digitalWrite(LED_BUILTIN, HIGH);
-                delay(2000);
+                setStatus(StatusCode::DrivingForward);
+                delayWithStatusLEDUpdate(2000);
                 turn(90);
             }
             else if (canStart)
@@ -720,16 +726,16 @@ void loop()
                 canStart = false;
                 stop();
                 setSpeed(0);
-                digitalWrite(LED_BUILTIN, LOW);
-                delay(2000);
+                setStatus(StatusCode::ManualPause);
+                delayWithStatusLEDUpdate(2000);
                 turn(90);
             }
         default:
             setSpeed(0);
             stop();
+            setStatus(StatusCode::ManualPause, false);
             break;
         }
     }
-
-    delay(5);
+    delayWithStatusLEDUpdate(5);
 }
