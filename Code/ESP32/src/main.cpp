@@ -368,7 +368,7 @@ void loop()
                 char turnDirection;
                 // stop();
                 backward();
-                setSpeed(255);
+                setSpeed(unstuckSpeed);
                 delay(1000);
                 while (getDistance(TF_F) < Min_Distance_turn)
                 {
@@ -377,7 +377,9 @@ void loop()
                     if (prevDistance - getDistance(TF_F) < 5) // if not getting away, break
                         break;
                 }
+                
                 // delay(100);
+                int prevTurnDistance = getDistance(TF_F);
                 if (TF_L_DISTANCE > TF_R_DISTANCE && TF_L_DISTANCE > WALL_DIS_TH)
                 {
                     turn('L'); // turn left
@@ -394,6 +396,19 @@ void loop()
                 forward();
                 setSpeed(speed);
                 delay(TURN_TIME_MS);
+                
+                if (getDistance(TF_F) == prevTurnDistance) // STUCK
+                {
+                    Serial.println("STUCK IN TURN, TRY AGAIN");
+                    backward();
+                    while (getDistance(TF_F) - prevTurnDistance < 5)
+                    {
+                        backward();
+                        delay(500);
+                        forward();
+                        delay(500);
+                    }
+                }
 
                 // // turn until L and R are similar distance (10% tolerance) or timeout 2s
                 // unsigned long startTime = millis();
