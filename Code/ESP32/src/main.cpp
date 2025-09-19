@@ -317,33 +317,33 @@ void loop()
                 delay(2000);
                 return; // wait for manual restart
             }
-            else if (historyCountBeforeUpdate == FRONT_DISTANCE_HISTORY &&
-                     prevFrontMaxDistance - TF_F_DISTANCE > 1 /*&& forwardSince > 3000*/) // possibly stuck detect
-            {
-                Serial.println("POSSIBLY STUCK");
-                stuckCounter++;
-                if (stuckCounter > 3)
-                {
-                    Serial.println("STUCK! ");
-                    stuckCounter = 3; // max 3
-                    while (prevFrontMaxDistance - TF_F_DISTANCE > 2)
-                    {
-                        Serial.println("STUCK! UNSTUCKING");
-                        TF_F_DISTANCE = getDistance(TF_F);
-                        delay(50);
-                        setSpeed(unstuckSpeed);
-                        backward();
-                        delay(500);
-                        forward();
-                        delay(500);
-                        backward();
-                        delay(1000);
-                        setSpeed(speed);
-                    }
-                    stuckCounter = 0;
-                }
-                return;
-            }
+            // else if (historyCountBeforeUpdate == FRONT_DISTANCE_HISTORY &&
+            //          prevFrontMaxDistance - TF_F_DISTANCE > 1 /*&& forwardSince > 3000*/) // possibly stuck detect
+            // {
+            //     Serial.println("POSSIBLY STUCK");
+            //     stuckCounter++;
+            //     if (stuckCounter > 3)
+            //     {
+            //         Serial.println("STUCK! ");
+            //         stuckCounter = 3; // max 3
+            //         while (prevFrontMaxDistance - TF_F_DISTANCE > 2)
+            //         {
+            //             Serial.println("STUCK! UNSTUCKING");
+            //             TF_F_DISTANCE = getDistance(TF_F);
+            //             delay(50);
+            //             setSpeed(unstuckSpeed);
+            //             backward();
+            //             delay(500);
+            //             forward();
+            //             delay(500);
+            //             backward();
+            //             delay(1000);
+            //             setSpeed(speed);
+            //         }
+            //         stuckCounter = 0;
+            //     }
+                // return;
+            // }
 
             if (TF_F_DISTANCE > F_dis_TH)
             {
