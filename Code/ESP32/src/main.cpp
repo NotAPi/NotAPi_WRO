@@ -37,9 +37,10 @@ int stuckCounter = 0;
 const int unstuckSpeed = 255;
 
 const int F_dis_TH = 90;         // cm
-const int F_dis_Crash_TH = 35;    // cm
-const int Min_Distance_turn = 45; // cm
-const int WALL_DIS_TH = 50;       // cm
+const int F_dis_Crash_TH = 30;    // cm
+const int F_dis_uncrash_TH = 50; // cm
+const int Min_Distance_turn = 70; // cm
+const int WALL_DIS_TH = 60;       // cm
 const int TURN_TIME_MS = 2500;    // ms; minimum time to turn
 const int forwardSince = 0;
 const int Max_Speed = 200; // cm/s // ik it low but
@@ -58,6 +59,31 @@ int frontDistanceHistory[FRONT_DISTANCE_HISTORY] = {-1, -1, -1, -1, -1, -1, -1, 
 size_t frontDistanceHistoryIndex = 0;
 size_t frontDistanceHistoryCount = 0;
 unsigned long frontDistanceTimeHistory[FRONT_DISTANCE_HISTORY] = {0};
+
+void flashStatusLED(uint8_t flashes, uint16_t onMs, uint16_t offMs)
+{
+    for (uint8_t i = 0; i < flashes; ++i)
+    {
+        digitalWrite(LED_BUILTIN, HIGH);
+        delay(onMs);
+        digitalWrite(LED_BUILTIN, LOW);
+        if (i + 1U < flashes)
+        {
+            delay(offMs);
+        }
+    }
+}
+
+void clearFrontDistanceHistory()
+{
+    frontDistanceHistoryIndex = 0;
+    frontDistanceHistoryCount = 0;
+    for (size_t i = 0; i < FRONT_DISTANCE_HISTORY; ++i)
+    {
+        frontDistanceHistory[i] = -1;
+        frontDistanceTimeHistory[i] = 0;
+    }
+}
 
 int getDistance(uint8_t addr)
 {
@@ -93,6 +119,35 @@ float getSpeed()
 
     return distanceDelta / timeDeltaSeconds;
 }
+
+bool isForwardStuck()
+{
+    if (frontDistanceHistoryCount < 4)
+    {
+        return false;
+    }
+
+    int minDistance = frontDistanceHistory[0];
+    int maxDistance = frontDistanceHistory[0];
+    for (size_t i = 1; i < frontDistanceHistoryCount; ++i)
+    {
+        if (frontDistanceHistory[i] < minDistance)
+        {
+            minDistance = frontDistanceHistory[i];
+        }
+        if (frontDistanceHistory[i] > maxDistance)
+        {
+            maxDistance = frontDistanceHistory[i];
+        }
+    }
+
+    bool nearZero = maxDistance <= 5;
+    bool lowVariance = (maxDistance - minDistance) <= 3;
+
+    return nearZero && lowVariance;
+}
+
+
 
 void setSpeed(int spd)
 {
@@ -179,6 +234,19 @@ bool checkIfStuck()
         return true;
     }
     return false;
+}
+
+void attemptForwardUnstuck()
+{
+    Serial.println("FORWARD STUCK - REVERSING");
+    flashStatusLED(4, 80, 80);
+    backward();
+    setSpeed(unstuckSpeed);
+    delay(500);
+    stop();
+    setSpeed(0);
+    delay(200);
+    clearFrontDistanceHistory();
 }
 
 void setup()
@@ -290,7 +358,7 @@ void loop()
     // START:
     // F_dis > F_dis_TH -> forward
     // F_dis < F_dis_TH -> stop -> L_dis > R_dis ? turn left : turn right
-    // DO PID to try to keep OUTER WALL distance = WALL_DIS_TH
+    // DO PID to try to keep OUTER WALL distance = WALL_DIS_TH (not implemented)
     // LOOP
     if (!canStart)
     {
@@ -358,15 +426,15 @@ void loop()
                 }
             }
 
-            if (TF_F_DISTANCE < F_dis_Crash_TH)
+            if (TF_F_DISTANCE < F_dis_Crash_TH )//&& servoAngle == 90 || TF_F_DISTANCE < F_dis_Crash_TH - 20 && servoAngle != 90) // CRASH DETECTED
             {
                 int stuck = 0;
                 Serial.println("CRASH! STOP");
                 backward();
-                setSpeed(speed);
+                setSpeed(200);
                 delay(100);
                 int startTime = millis();
-                while (getDistance(TF_F) < Min_Distance_turn)
+                while (getDistance(TF_F) < F_dis_uncrash_TH)
                 {
                     int prevDistance = getDistance(TF_F);
                     delay(50);
@@ -377,17 +445,18 @@ void loop()
 
                     if (millis() - startTime > 8000)
                     {
-                        canStart = false; // if stuck for 8s, stop
+                        // canStart = false; // if stuck for 8s, stop
+                        Serial.println("UNABLE TO UNSTUCK, WAIT FOR MANUAL RESET");
                     }
                     else if (millis() - startTime > 2000)
                     {
                         // setSpeed(255); // after 2s, go full speed
                         backward();
-                        delay(500);
+                        delay(700);
                         forward();
                         delay(500);
                         backward();
-                        delay(500);
+                        delay(700);
 
                         stuck++;
                     }
@@ -442,6 +511,11 @@ void loop()
 
                 forward();
                 setSpeed(speed);
+                if (isForwardStuck())
+                {
+                    attemptForwardUnstuck();
+                    return;
+                }
                 // if (TF_L_DISTANCE < WALL_DIS_TH)
                 // {
                 //     turn(120); // turn right
@@ -489,11 +563,11 @@ void loop()
                 setSpeed(speed);
                 delay(TURN_TIME_MS);
 
-                if (getDistance(TF_F) == prevTurnDistance) // STUCK
+                if (getSpeed() == 0) // STUCK
                 {
                     Serial.println("STUCK IN TURN, TRY AGAIN");
                     backward();
-                    while (getDistance(TF_F) - prevTurnDistance < 5)
+                    while (getSpeed() < 5)
                     {
                         backward();
                         delay(500);
