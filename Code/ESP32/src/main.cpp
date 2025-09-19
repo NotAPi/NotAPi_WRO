@@ -36,14 +36,13 @@ bool canStart = false;
 int stuckCounter = 0;
 const int unstuckSpeed = 255;
 
-
 const int F_dis_TH = 120;         // cm
 const int F_dis_Crash_TH = 40;    // cm
 const int Min_Distance_turn = 80; // cm
 const int WALL_DIS_TH = 85;       // cm
 const int TURN_TIME_MS = 2500;    // ms; minimum time to turn
 const int forwardSince = 0;
-const int Max_Speed = 150; // cm/s
+const int Max_Speed = 200; // cm/s // ik it low but
 bool STATUS_LED_STATUS = false;
 
 const int MOTOR_PWM_CH = 8;
@@ -54,16 +53,11 @@ int TF_F_DISTANCE;
 int TF_L_DISTANCE;
 int TF_R_DISTANCE;
 
-const size_t FRONT_DISTANCE_HISTORY = 3;
-int frontDistanceHistory[FRONT_DISTANCE_HISTORY] = {-1, -1, -1};
+const size_t FRONT_DISTANCE_HISTORY = 10;
+int frontDistanceHistory[FRONT_DISTANCE_HISTORY] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 size_t frontDistanceHistoryIndex = 0;
 size_t frontDistanceHistoryCount = 0;
 unsigned long frontDistanceTimeHistory[FRONT_DISTANCE_HISTORY] = {0};
-
-void setSpeed(int spd)
-{
-    ledcWrite(EN, spd);
-}
 
 int getDistance(uint8_t addr)
 {
@@ -100,17 +94,37 @@ float getSpeed()
     return distanceDelta / timeDeltaSeconds;
 }
 
+void setSpeed(int spd)
+{
+    // Serial.print("Setting speed to ");
+    // Serial.println(spd);
+    if (spd < 0)
+        spd = 0;
+    if (spd > 255)
+        spd = 255;
+
+    if (getDistance(TF_F) > Min_Distance_turn)
+    {
+        bool forwardActive = digitalRead(FW) == HIGH && digitalRead(BW) == LOW;
+        if (forwardActive && spd > 0)
+        {
+            float currentSpeed = getSpeed();
+            if (currentSpeed > Max_Speed)
+            {
+                spd = 0;
+                Serial.println("Speed limit exceeded");
+            }
+        }
+    }
+    // Serial.print("Set speed to ");
+    // Serial.println(spd);
+    ledcWrite(EN, spd);
+}
+
 void forward()
 {
-    // limit speed to MAX_Speed
-    if (getSpeed() > Max_Speed)
-    {
-        setSpeed(0);
-    }
-    else {
-        setSpeed(speed);
-    }
-
+    Serial.println("FORWARD");
+    setSpeed(speed);
     digitalWrite(FW, HIGH);
     digitalWrite(BW, LOW);
 }
@@ -126,8 +140,6 @@ void stop()
     digitalWrite(FW, LOW);
     digitalWrite(BW, LOW);
 }
-
-
 
 void turn(int angle) // for int
 {
@@ -147,6 +159,26 @@ void turn(char dir) // for char
         turn(60);
     else
         turn(90);
+}
+
+bool checkIfStuck()
+{
+    if (frontDistanceHistoryCount < 2)
+    {
+        return false;
+    }
+
+    size_t newestIndex = (frontDistanceHistoryIndex + FRONT_DISTANCE_HISTORY - 1) % FRONT_DISTANCE_HISTORY;
+    size_t oldestIndex = (frontDistanceHistoryCount == FRONT_DISTANCE_HISTORY) ? frontDistanceHistoryIndex : 0;
+
+    int newestDistance = frontDistanceHistory[newestIndex];
+    int oldestDistance = frontDistanceHistory[oldestIndex];
+
+    if ((newestDistance + oldestDistance) / 2 < 12)
+    {
+        return true;
+    }
+    return false;
 }
 
 void setup()
@@ -309,6 +341,23 @@ void loop()
             Serial.print(getSpeed());
             Serial.println(" cm/s");
 
+            if (checkIfStuck())
+            {
+                Serial.println("POSSIBLY STUCK");
+
+                while (true)
+                {
+                    Serial.print("Speed history: ");
+                    for (size_t i = 0; i < frontDistanceHistoryCount; ++i)
+                    {
+                        Serial.print(frontDistanceHistory[i]);
+                        Serial.print(" ");
+                    }
+                    Serial.println();
+                    delay(1000);
+                }
+            }
+
             if (TF_F_DISTANCE < F_dis_Crash_TH)
             {
                 int stuck = 0;
@@ -385,7 +434,7 @@ void loop()
             //         }
             //         stuckCounter = 0;
             //     }
-                // return;
+            // return;
             // }
 
             if (TF_F_DISTANCE > F_dis_TH)
@@ -420,7 +469,7 @@ void loop()
                     if (prevDistance - getDistance(TF_F) < 5) // if not getting away, break
                         break;
                 }
-                
+
                 // delay(100);
                 int prevTurnDistance = getDistance(TF_F);
                 if (TF_L_DISTANCE > TF_R_DISTANCE && TF_L_DISTANCE > WALL_DIS_TH)
@@ -439,7 +488,7 @@ void loop()
                 forward();
                 setSpeed(speed);
                 delay(TURN_TIME_MS);
-                
+
                 if (getDistance(TF_F) == prevTurnDistance) // STUCK
                 {
                     Serial.println("STUCK IN TURN, TRY AGAIN");
@@ -528,19 +577,17 @@ void loop()
         switch (input)
         {
         case 'w':
-            ledcWrite(EN, 0);
+            setSpeed(0);
             delay(100);
-            ledcWrite(EN, speed);
-            digitalWrite(FW, HIGH);
-            digitalWrite(BW, LOW);
+            forward();
+            setSpeed(speed);
             break;
 
         case 's':
-            ledcWrite(EN, 0);
+            setSpeed(0);
             delay(100);
-            ledcWrite(EN, speed);
-            digitalWrite(FW, LOW);
-            digitalWrite(BW, HIGH);
+            backward();
+            setSpeed(speed);
             break;
 
         case 'a':
@@ -570,7 +617,7 @@ void loop()
             {
                 speed += 25;
             }
-            ledcWrite(EN, speed);
+            setSpeed(speed);
             Serial.println(speed);
             break;
         case 'q':
@@ -582,7 +629,7 @@ void loop()
             {
                 speed -= 25;
             }
-            ledcWrite(EN, speed);
+            setSpeed(speed);
             Serial.println(speed);
             break;
         case 'p':
@@ -604,9 +651,8 @@ void loop()
                 turn(90);
             }
         default:
-            ledcWrite(EN, 0);
-            digitalWrite(FW, LOW);
-            digitalWrite(BW, LOW);
+            setSpeed(0);
+            stop();
             break;
         }
     }
